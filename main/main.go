@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	g, err := connecc.NewGenGraph()
+	g, err := connecc.NewGenGraph("bolt://localhost:7687", "neo4j", "prod")
 	if err != nil {
 		panic(err)
 	}

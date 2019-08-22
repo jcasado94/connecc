@@ -4,17 +4,13 @@ import (
 	neo4j "github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
-const (
-	endpoint = "bolt://localhost:7687"
-)
-
 type Driver struct {
 	driver  neo4j.Driver
 	session neo4j.Session
 }
 
-func NewDriver(write bool) (Driver, error) {
-	driver, err := neo4j.NewDriver(endpoint, neo4j.BasicAuth("neo4j", "pwd123", ""))
+func NewDriver(dbEndpoint, dbUsername, dbPw string, write bool) (Driver, error) {
+	driver, err := neo4j.NewDriver(dbEndpoint, neo4j.BasicAuth(dbUsername, dbPw, ""))
 	if err != nil {
 		return Driver{}, err
 	}
@@ -59,6 +55,31 @@ func (d *Driver) NeighboursGen(id int) (neighboursGenResponse, error) {
 	}
 
 	return response.(neighboursGenResponse), nil
+}
+
+func (d *Driver) NeighboursBelongsTo(id int) (neighboursBelongsToResponse, error) {
+	response, err := d.session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(
+			"MATCH (a)-[r:BelongsTo]-(b) WHERE id(a)=$id RETURN id(b)",
+			map[string]interface{}{"id": id})
+
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := newNeighboursBelongsToResponse(result)
+		if err != nil {
+			return nil, err
+		}
+
+		return resp, nil
+	})
+
+	if err != nil {
+		return neighboursBelongsToResponse{}, err
+	}
+
+	return response.(neighboursBelongsToResponse), nil
 }
 
 func (d *Driver) close() {
