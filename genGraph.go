@@ -12,9 +12,10 @@ type genGraph struct {
 	driver             db.Driver
 	connectionsCache   map[int]map[int][]float64
 	genConnectionsInfo map[int]map[int][]genConnectionInfo
+	s, t int
 }
 
-func NewGenGraph(dbEndpoint, dbUsername, dbPw string) (genGraph, error) {
+func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (genGraph, error) {
 	driver, err := db.NewDriver(dbEndpoint, dbUsername, dbPw, false)
 	if err != nil {
 		return genGraph{}, err
@@ -23,6 +24,8 @@ func NewGenGraph(dbEndpoint, dbUsername, dbPw string) (genGraph, error) {
 		driver:             driver,
 		connectionsCache:   make(map[int]map[int][]float64),
 		genConnectionsInfo: make(map[int]map[int][]genConnectionInfo),
+		s: s,
+		t: t,
 	}
 
 	return g, nil
@@ -83,4 +86,16 @@ func (g *genGraph) retrieveBelongsToConnections(n int) error {
 	}
 
 	return nil
+}
+
+func (g *genGraph) S() int {
+	return g.s
+}
+
+func (g *genGraph) T() int {
+	return g.t
+}
+
+func (g *genGraph) FValue(n int) float64 {
+	
 }
