@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/jcasado94/connecc"
+	"github.com/jcasado94/connecc/graph"
+	"github.com/jcasado94/kstar"
 )
 
 func main() {
-	g, err := connecc.NewGenGraph("bolt://localhost:7687", "neo4j", "prod")
+	g, err := graph.NewGenGraph(3, 0, "bolt://localhost:7687", "neo4j", "prod")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(g.Connections(23))
+	fmt.Println(kstar.Run(g, 2))
 }

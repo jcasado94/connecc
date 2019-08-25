@@ -1,9 +1,10 @@
 package connecc_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/jcasado94/connecc"
+	"github.com/jcasado94/connecc/graph"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
@@ -11,6 +12,9 @@ const (
 	dbTestEndpoint = "bolt://localhost:7687"
 	dbTestUsername = "neo4j"
 	dbTestPw       = "test"
+
+	defaultCostBelongsToCity = 0.0
+	defaultCostBelongsTo     = 100.0
 )
 
 func newSessionTestGraph() (neo4j.Driver, neo4j.Session) {
@@ -60,15 +64,15 @@ func testConnectionsGraphMock(session neo4j.Session) (result []int, err error) {
 
 	response, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
-			"CREATE (a:Airport{code: $code1})-[r:Gen{price:$price, provider:$provider}]->(b:Airport{code: $code2}), (c:City{name: $city1}), (d:City{name:$city2}) RETURN id(a), id(b), id(c)",
-			map[string]interface{}{"code1": "YYZ", "price": 200.0, "provider": 0, "code2": "JFK", "city1": "Toronto", "city2": "New York"},
+			"CREATE (a:Airport{code: $code1})-[r:Gen{price:$price, provider:$provider}]->(b:Airport{code: $code2}), (e:Airport{code: $code3}), (c:City{name: $city1}), (d:City{name:$city2}) RETURN id(a), id(b), id(e), id(c), id(d)",
+			map[string]interface{}{"code1": "YYZ", "price": 200.0, "provider": 0, "code2": "JFK", "code3": "LGA", "city1": "Toronto", "city2": "New York"},
 		)
 		if err != nil {
 			return nil, err
 		}
 		result.Next()
 		record := result.Record()
-		return []int{int(record.GetByIndex(0).(int64)), int(record.GetByIndex(1).(int64)), int(record.GetByIndex(2).(int64))}, nil
+		return []int{int(record.GetByIndex(0).(int64)), int(record.GetByIndex(1).(int64)), int(record.GetByIndex(2).(int64)), int(record.GetByIndex(3).(int64)), int(record.GetByIndex(4).(int64))}, nil
 	})
 
 	if err != nil {
@@ -77,8 +81,8 @@ func testConnectionsGraphMock(session neo4j.Session) (result []int, err error) {
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
-			"MATCH (a:Airport), (b:City), (c:Airport), (d:City) WHERE a.code=$code1 AND b.name=$name1 AND c.code=$code2 AND d.name=$name2 CREATE (a)-[r:BelongsTo]->(b), (c)-[s:BelongsTo]->(d)",
-			map[string]interface{}{"code1": "JFK", "name1": "New York", "code2": "YYZ", "name2": "Toronto"},
+			"MATCH (a:Airport), (b:City), (c:Airport), (d:City), (e:Airport) WHERE a.code=$code1 AND b.name=$name1 AND c.code=$code2 AND e.code=$code3 AND d.name=$name2 CREATE (a)-[r:BelongsTo]->(b), (c)-[s:BelongsTo]->(d), (e)-[t:BelongsTo]->(b)",
+			map[string]interface{}{"code1": "JFK", "name1": "New York", "code2": "YYZ", "code3": "LGA", "name2": "Toronto"},
 		)
 		if err != nil {
 			return nil, err
@@ -102,25 +106,50 @@ func TestConnections(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	idYYZ, idJFK, idToronto := ids[0], ids[1], ids[2]
+	idYYZ, idJFK, idLGA, idToronto, idNewYork := ids[0], ids[1], ids[2], ids[3], ids[4]
+	fmt.Printf("IdYYZ: %d\nIdJFK: %d\nIdLGA: %d\nIdToronto: %d\nIdNewYork: %d\n", idYYZ, idJFK, idLGA, idToronto, idNewYork)
 
-	g, err := connecc.NewGenGraph(dbTestEndpoint, dbTestUsername, dbTestPw)
+	g, err := graph.NewGenGraph(idNewYork, idToronto, dbTestEndpoint, dbTestUsername, dbTestPw)
 	if err != nil {
 		t.Error(err)
 	}
 
-	yyzConnections := g.Connections(idYYZ)
-	expectedConnections := map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{0.0}}
-	for key, expectedSlice := range expectedConnections {
-		if _, exists := yyzConnections[key]; !exists {
-			t.Error("genGraph.Connections did not return the expected connections")
-		}
-		slice := yyzConnections[key]
-		for i, expectedValue := range expectedSlice {
-			if expectedValue != slice[i] {
-				t.Error("genGraph.Connections did not return the expected connections")
+	testCases := []struct {
+		id   int
+		want map[int][]float64
+	}{
+		{idYYZ, map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}},
+		{idJFK, map[int][]float64{idLGA: []float64{defaultCostBelongsTo}, idNewYork: []float64{defaultCostBelongsToCity}}},
+		{idNewYork, map[int][]float64{idJFK: []float64{defaultCostBelongsToCity}, idLGA: []float64{defaultCostBelongsToCity}}},
+		{idToronto, make(map[int][]float64)},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Connections for %d", tc.id), func(t *testing.T) {
+			connections := g.Connections(tc.id)
+			if len(tc.want) != len(connections) {
+				cleanDb(session)
+				t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
+				return
 			}
-		}
+			for key, expectedSlice := range tc.want {
+				if _, exists := connections[key]; !exists {
+					cleanDb(session)
+					t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
+				}
+				slice := connections[key]
+				if len(expectedSlice) != len(slice) {
+					cleanDb(session)
+					t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
+					continue
+				}
+				for i, expectedValue := range expectedSlice {
+					if expectedValue != slice[i] {
+						cleanDb(session)
+						t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
+					}
+				}
+			}
+		})
 	}
 
 	err = cleanDb(session)
@@ -128,4 +157,3 @@ func TestConnections(t *testing.T) {
 		t.Error(err)
 	}
 }
-

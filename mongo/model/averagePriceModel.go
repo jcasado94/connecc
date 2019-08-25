@@ -31,6 +31,14 @@ func NewAveragePriceModel(ap *entity.AveragePrice) *AveragePriceModel {
 	}
 }
 
+func (apm *AveragePriceModel) AddAverage(t string, price float64, n int) {
+	avg := Average{
+		Avg: price,
+		N:   n,
+	}
+	apm.Averages[t] = avg
+}
+
 func AveragePriceModelIndex() mgo.Index {
 	return mgo.Index{
 		Key:        []string{"ID"},
