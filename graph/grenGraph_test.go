@@ -1,10 +1,9 @@
-package connecc_test
+package graph
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/jcasado94/connecc/graph"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
@@ -12,9 +11,6 @@ const (
 	dbTestEndpoint = "bolt://localhost:7687"
 	dbTestUsername = "neo4j"
 	dbTestPw       = "test"
-
-	defaultCostBelongsToCity = 0.0
-	defaultCostBelongsTo     = 100.0
 )
 
 func newSessionTestGraph() (neo4j.Driver, neo4j.Session) {
@@ -109,48 +105,71 @@ func TestConnections(t *testing.T) {
 	idYYZ, idJFK, idLGA, idToronto, idNewYork := ids[0], ids[1], ids[2], ids[3], ids[4]
 	fmt.Printf("IdYYZ: %d\nIdJFK: %d\nIdLGA: %d\nIdToronto: %d\nIdNewYork: %d\n", idYYZ, idJFK, idLGA, idToronto, idNewYork)
 
-	g, err := graph.NewGenGraph(idNewYork, idToronto, dbTestEndpoint, dbTestUsername, dbTestPw)
+	g, err := NewGenGraph(idNewYork, idToronto, dbTestEndpoint, dbTestUsername, dbTestPw)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testCases := []struct {
-		id   int
-		want map[int][]float64
-	}{
-		{idYYZ, map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}},
-		{idJFK, map[int][]float64{idLGA: []float64{defaultCostBelongsTo}, idNewYork: []float64{defaultCostBelongsToCity}}},
-		{idNewYork, map[int][]float64{idJFK: []float64{defaultCostBelongsToCity}, idLGA: []float64{defaultCostBelongsToCity}}},
-		{idToronto, make(map[int][]float64)},
-	}
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("Connections for %d", tc.id), func(t *testing.T) {
-			connections := g.Connections(tc.id)
-			if len(tc.want) != len(connections) {
-				cleanDb(session)
-				t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
-				return
-			}
-			for key, expectedSlice := range tc.want {
-				if _, exists := connections[key]; !exists {
+	t.Run("Test Connections result", func(t *testing.T) {
+		testCases := []struct {
+			id                  int
+			expectedConnections map[int][]float64
+		}{
+			{idYYZ, map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}},
+			{idJFK, map[int][]float64{idLGA: []float64{defaultCostBelongsTo}, idNewYork: []float64{defaultCostBelongsToCity}}},
+			{idNewYork, map[int][]float64{idJFK: []float64{defaultCostBelongsToCity}, idLGA: []float64{defaultCostBelongsToCity}}},
+			{idToronto, make(map[int][]float64)},
+		}
+		for _, tc := range testCases {
+			t.Run(fmt.Sprintf("Connections for %d", tc.id), func(t *testing.T) {
+				connections := g.Connections(tc.id)
+				if len(tc.expectedConnections) != len(connections) {
 					cleanDb(session)
-					t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
+					t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+					return
 				}
-				slice := connections[key]
-				if len(expectedSlice) != len(slice) {
-					cleanDb(session)
-					t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
-					continue
-				}
-				for i, expectedValue := range expectedSlice {
-					if expectedValue != slice[i] {
+				for key, expectedSlice := range tc.expectedConnections {
+					if _, exists := connections[key]; !exists {
 						cleanDb(session)
-						t.Errorf("connection maps differ. Want %v, got %v", tc.want, connections)
+						t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+					}
+					slice := connections[key]
+					if len(expectedSlice) != len(slice) {
+						cleanDb(session)
+						t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+						continue
+					}
+					for i, expectedValue := range expectedSlice {
+						if expectedValue != slice[i] {
+							cleanDb(session)
+							t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+						}
 					}
 				}
+			})
+		}
+	})
+
+	t.Run("Test stored cache", func(t *testing.T) {
+		expectedNodesCache := map[int]node{
+			idJFK:     newAirport(idJFK, "JFK"),
+			idLGA:     newAirport(idLGA, "LGA"),
+			idToronto: newCity(idToronto, "Toronto"),
+			idNewYork: newCity(idNewYork, "New York"),
+		}
+		if len(expectedNodesCache) != len(g.nodesCache) {
+			cleanDb(session)
+			t.Errorf("nodesCache not properly stored. Want %v, got %v", expectedNodesCache, g.nodesCache)
+			return
+		}
+		for id, expectedNode := range expectedNodesCache {
+			if n, exists := g.nodesCache[id]; !exists || !expectedNode.Equals(n) {
+				cleanDb(session)
+				t.Errorf("nodesCache not properly stored. Want %v, got %v", expectedNodesCache, g.nodesCache)
+				return
 			}
-		})
-	}
+		}
+	})
 
 	err = cleanDb(session)
 	if err != nil {
