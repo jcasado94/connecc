@@ -9,6 +9,8 @@ const (
 		"UNION MATCH (a:City)-[r:BelongsTo]-(b) WHERE id(a)=$id AND id(a)=$s RETURN labels(b)[0], id(b), properties(b)"
 	neighboursBelongsToThroughCityQuery = "MATCH (a)-[r1:BelongsTo]->(b:City)-[r2:BelongsTo]-(c) WHERE id(a)=$id RETURN labels(c)[0], id(c), properties(c) ORDER BY id(r2)"
 	neighboursGenQuery                  = "MATCH (a)-[r:Gen]->(b)	WHERE id(a)=$id RETURN r.price, r.provider, labels(b)[0], id(b), properties(b) ORDER BY id(r)"
+
+	nodeInfoQuery = "MATCH (n) WHERE id(n)=$id RETURN labels(n)[0], properties(n)"
 )
 
 type Driver struct {
@@ -36,6 +38,26 @@ func NewDriver(dbEndpoint, dbUsername, dbPw string, write bool) (Driver, error) 
 		driver,
 		session,
 	}, err
+}
+
+func (d *Driver) NodeInfo(id int) (neo4j.Result, error) {
+	response, err := d.session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(
+			nodeInfoQuery,
+			map[string]interface{}{"id": id})
+
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response.(neo4j.Result), nil
 }
 
 func (d *Driver) NeighboursGen(id int) (neo4j.Result, error) {

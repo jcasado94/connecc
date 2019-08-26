@@ -56,7 +56,7 @@ func cleanDb(session neo4j.Session) error {
 
 }
 
-func testConnectionsGraphMock(session neo4j.Session) (result []int, err error) {
+func testGraphMock(session neo4j.Session) (result []int, err error) {
 
 	response, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
@@ -98,12 +98,9 @@ func TestConnections(t *testing.T) {
 	defer driver.Close()
 	defer session.Close()
 
-	ids, err := testConnectionsGraphMock(session)
-	if err != nil {
-		t.Error(err)
-	}
+	ids, err := testGraphMock(session)
 	idYYZ, idJFK, idLGA, idToronto, idNewYork := ids[0], ids[1], ids[2], ids[3], ids[4]
-	fmt.Printf("IdYYZ: %d\nIdJFK: %d\nIdLGA: %d\nIdToronto: %d\nIdNewYork: %d\n", idYYZ, idJFK, idLGA, idToronto, idNewYork)
+	t.Logf("IdYYZ: %d\nIdJFK: %d\nIdLGA: %d\nIdToronto: %d\nIdNewYork: %d\n", idYYZ, idJFK, idLGA, idToronto, idNewYork)
 
 	g, err := NewGenGraph(idNewYork, idToronto, dbTestEndpoint, dbTestUsername, dbTestPw)
 	if err != nil {
@@ -126,7 +123,6 @@ func TestConnections(t *testing.T) {
 				if len(tc.expectedConnections) != len(connections) {
 					cleanDb(session)
 					t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
-					return
 				}
 				for key, expectedSlice := range tc.expectedConnections {
 					if _, exists := connections[key]; !exists {
@@ -160,13 +156,11 @@ func TestConnections(t *testing.T) {
 		if len(expectedNodesCache) != len(g.nodesCache) {
 			cleanDb(session)
 			t.Errorf("nodesCache not properly stored. Want %v, got %v", expectedNodesCache, g.nodesCache)
-			return
 		}
 		for id, expectedNode := range expectedNodesCache {
 			if n, exists := g.nodesCache[id]; !exists || !expectedNode.Equals(n) {
 				cleanDb(session)
 				t.Errorf("nodesCache not properly stored. Want %v, got %v", expectedNodesCache, g.nodesCache)
-				return
 			}
 		}
 	})
@@ -176,3 +170,26 @@ func TestConnections(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestNewGenGraph(t *testing.T) {
+	driver, session := newSessionTestGraph()
+	defer driver.Close()
+	defer session.Close()
+
+	ids, err := testGraphMock(session)
+	if err != nil {
+		t.Fail()
+	}
+
+	idToronto, idNewYork := ids[3], ids[4]
+	g, err := NewGenGraph(idNewYork, idToronto, dbTestEndpoint, dbTestUsername, dbTestPw)
+	if _, exists := g.nodesCache[idNewYork]; !exists {
+		t.Errorf("No cached node for node s: %d", idNewYork)
+	}
+	expectedNode := newCity(idNewYork, "New York")
+	if !expectedNode.Equals(g.nodesCache[idNewYork]) {
+		t.Errorf("Cached s node differs. Expected %v, got %v.", expectedNode, g.nodesCache[idNewYork])
+	}
+
+}
+

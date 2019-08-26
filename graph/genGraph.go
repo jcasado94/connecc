@@ -36,7 +36,27 @@ func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (genGraph, error
 		t:                  t,
 	}
 
+	err = g.cacheNodeInfo(s)
+	if err != nil {
+		return g, err
+	}
+
 	return g, nil
+}
+
+func (g *genGraph) cacheNodeInfo(id int) error {
+	result, err := g.dbDriver.NodeInfo(id)
+	if err != nil {
+		return err
+	}
+	if result.Next() {
+		rec := result.Record()
+		label := rec.GetByIndex(0).(string)
+		params := rec.GetByIndex(1).(map[string]interface{})
+		node := newNode(label, id, params)
+		g.nodesCache[id] = node
+	}
+	return result.Err()
 }
 
 func (g genGraph) Connections(n int) map[int][]float64 {
