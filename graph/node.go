@@ -15,19 +15,19 @@ type airport struct {
 	code string
 }
 
-func newAirport(id int, code string) airport {
-	return airport{
+func newAirport(id int, code string) *airport {
+	return &airport{
 		id:   id,
 		code: code,
 	}
 }
 
-func (a airport) Id() int {
+func (a *airport) Id() int {
 	return a.id
 }
 
-func (a1 airport) Equals(n node) bool {
-	a2 := n.(airport)
+func (a1 *airport) Equals(n node) bool {
+	a2 := n.(*airport)
 	return a1.id == a2.id && a1.code == a2.code
 }
 
@@ -36,19 +36,19 @@ type city struct {
 	name string
 }
 
-func newCity(id int, name string) city {
-	return city{
+func newCity(id int, name string) *city {
+	return &city{
 		id:   id,
 		name: name,
 	}
 }
 
-func (c city) Id() int {
+func (c *city) Id() int {
 	return c.id
 }
 
-func (c1 city) Equals(n node) bool {
-	c2 := n.(city)
+func (c1 *city) Equals(n node) bool {
+	c2 := n.(*city)
 	return c1.id == c2.id && c1.name == c2.name
 }
 

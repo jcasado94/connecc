@@ -165,10 +165,8 @@ func TestConnections(t *testing.T) {
 		}
 	})
 
-	err = cleanDb(session)
-	if err != nil {
-		t.Error(err)
-	}
+	cleanDb(session)
+
 }
 
 func TestNewGenGraph(t *testing.T) {
@@ -191,5 +189,6 @@ func TestNewGenGraph(t *testing.T) {
 		t.Errorf("Cached s node differs. Expected %v, got %v.", expectedNode, g.nodesCache[idNewYork])
 	}
 
+	cleanDb(session)
 }
 
