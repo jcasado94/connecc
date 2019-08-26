@@ -12,7 +12,8 @@ type genGraph struct {
 	mDriver            mongoDriver
 	dbDriver           db.Driver
 	connectionsCache   map[int]map[int][]float64
-	genConnectionsInfo map[int]map[int][]genConnectionInfo
+	genConnectionsInfo map[int]map[int][]*genConnectionInfo
+	nodesCache         map[int]node
 	s, t               int
 }
 
@@ -29,12 +30,33 @@ func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (genGraph, error
 		mDriver:            mDriver,
 		dbDriver:           driver,
 		connectionsCache:   make(map[int]map[int][]float64),
-		genConnectionsInfo: make(map[int]map[int][]genConnectionInfo),
+		genConnectionsInfo: make(map[int]map[int][]*genConnectionInfo),
+		nodesCache:         make(map[int]node),
 		s:                  s,
 		t:                  t,
 	}
 
+	err = g.cacheNodeInfo(s)
+	if err != nil {
+		return g, err
+	}
+
 	return g, nil
+}
+
+func (g *genGraph) cacheNodeInfo(id int) error {
+	result, err := g.dbDriver.NodeInfo(id)
+	if err != nil {
+		return err
+	}
+	if result.Next() {
+		rec := result.Record()
+		label := rec.GetByIndex(0).(string)
+		params := rec.GetByIndex(1).(map[string]interface{})
+		node := newNode(label, id, params)
+		g.nodesCache[id] = node
+	}
+	return result.Err()
 }
 
 func (g genGraph) Connections(n int) map[int][]float64 {
@@ -43,8 +65,9 @@ func (g genGraph) Connections(n int) map[int][]float64 {
 		return g.connectionsCache[n]
 	}
 
-	// concurrent?
 	g.connectionsCache[n] = make(map[int][]float64)
+
+	// concurrent?
 	err := g.retrieveGenConnections(n)
 	if err != nil {
 		panic(err)
@@ -60,7 +83,7 @@ func (g genGraph) Connections(n int) map[int][]float64 {
 }
 
 func (g genGraph) retrieveGenConnections(n int) error {
-	g.genConnectionsInfo[n] = make(map[int][]genConnectionInfo)
+	g.genConnectionsInfo[n] = make(map[int][]*genConnectionInfo)
 
 	neighboursGenResult, err := g.dbDriver.NeighboursGen(n)
 	if err != nil {
@@ -72,12 +95,16 @@ func (g genGraph) retrieveGenConnections(n int) error {
 		return err
 	}
 	for _, gcon := range gn {
-		if _, exists := g.connectionsCache[gcon.Id]; !exists {
-			g.connectionsCache[n][gcon.Id] = make([]float64, 0)
-			g.genConnectionsInfo[n][gcon.Id] = make([]genConnectionInfo, 0)
+		id := gcon.n.Id()
+		if _, exists := g.nodesCache[id]; !exists {
+			g.nodesCache[id] = gcon.n
 		}
-		g.connectionsCache[n][gcon.Id] = append(g.connectionsCache[n][gcon.Id], gcon.Price)
-		g.genConnectionsInfo[n][gcon.Id] = append(g.genConnectionsInfo[n][gcon.Id], genConnectionInfo{provider: gcon.Provider})
+		if _, exists := g.connectionsCache[id]; !exists {
+			g.connectionsCache[n][id] = make([]float64, 0)
+			g.genConnectionsInfo[n][id] = make([]*genConnectionInfo, 0)
+		}
+		g.connectionsCache[n][id] = append(g.connectionsCache[n][id], gcon.Price)
+		g.genConnectionsInfo[n][id] = append(g.genConnectionsInfo[n][id], &genConnectionInfo{provider: gcon.Provider})
 	}
 
 	return nil
@@ -103,8 +130,12 @@ func (g genGraph) retrieveBelongsToConnections(n int) error {
 		return err
 	}
 	for _, btcon := range btn {
-		if _, exists := g.connectionsCache[n][btcon.Id]; !exists {
-			g.connectionsCache[n][btcon.Id] = []float64{btcon.Cost}
+		id := btcon.n.Id()
+		if _, exists := g.nodesCache[id]; !exists {
+			g.nodesCache[id] = btcon.n
+		}
+		if _, exists := g.connectionsCache[n][id]; !exists {
+			g.connectionsCache[n][id] = []float64{btcon.Cost}
 		}
 	}
 
