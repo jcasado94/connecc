@@ -17,14 +17,14 @@ type genGraph struct {
 	s, t               int
 }
 
-func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (genGraph, error) {
+func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*genGraph, error) {
 	driver, err := db.NewDriver(dbEndpoint, dbUsername, dbPw, false)
 	if err != nil {
-		return genGraph{}, err
+		return &genGraph{}, err
 	}
 	mDriver, err := newMongoDriver()
 	if err != nil {
-		return genGraph{}, err
+		return &genGraph{}, err
 	}
 	g := genGraph{
 		mDriver:            mDriver,
@@ -38,10 +38,10 @@ func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (genGraph, error
 
 	err = g.cacheNodeInfo(s)
 	if err != nil {
-		return g, err
+		return &g, err
 	}
 
-	return g, nil
+	return &g, nil
 }
 
 func (g *genGraph) cacheNodeInfo(id int) error {
@@ -59,7 +59,7 @@ func (g *genGraph) cacheNodeInfo(id int) error {
 	return result.Err()
 }
 
-func (g genGraph) Connections(n int) map[int][]float64 {
+func (g *genGraph) Connections(n int) map[int][]float64 {
 
 	if _, exists := g.connectionsCache[n]; exists {
 		return g.connectionsCache[n]
@@ -82,7 +82,7 @@ func (g genGraph) Connections(n int) map[int][]float64 {
 
 }
 
-func (g genGraph) retrieveGenConnections(n int) error {
+func (g *genGraph) retrieveGenConnections(n int) error {
 	g.genConnectionsInfo[n] = make(map[int][]*genConnectionInfo)
 
 	neighboursGenResult, err := g.dbDriver.NeighboursGen(n)
@@ -112,7 +112,7 @@ func (g genGraph) retrieveGenConnections(n int) error {
 }
 
 // Get the neighbours through the BelongsTo City node, plus the City node itself, excluding S. City nodes shall return no neighbours, except for S.
-func (g genGraph) retrieveBelongsToConnections(n int) error {
+func (g *genGraph) retrieveBelongsToConnections(n int) error {
 
 	//concurrent?
 	neighboursBelongsToCityResult, err := g.dbDriver.NeighboursBelongsToCity(n, g.S())
@@ -142,15 +142,15 @@ func (g genGraph) retrieveBelongsToConnections(n int) error {
 	return nil
 }
 
-func (g genGraph) S() int {
+func (g *genGraph) S() int {
 	return g.s
 }
 
-func (g genGraph) T() int {
+func (g *genGraph) T() int {
 	return g.t
 }
 
-func (g genGraph) FValue(n int) float64 {
+func (g *genGraph) FValue(n int) float64 {
 	avgPrice, err := g.mDriver.getAvgPrice(n, g.T())
 	if err != nil {
 		panic(err)
