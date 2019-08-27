@@ -113,7 +113,7 @@ func TestConnections(t *testing.T) {
 			expectedConnections map[int][]float64
 		}{
 			{idYYZ, map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}},
-			{idJFK, map[int][]float64{idLGA: []float64{defaultCostBelongsTo}, idNewYork: []float64{defaultCostBelongsToCity}}},
+			{idJFK, map[int][]float64{idLGA: []float64{defaultCostBelongsTo}}},
 			{idNewYork, map[int][]float64{idJFK: []float64{defaultCostBelongsToCity}, idLGA: []float64{defaultCostBelongsToCity}}},
 			{idToronto, make(map[int][]float64)},
 		}
@@ -121,24 +121,23 @@ func TestConnections(t *testing.T) {
 			t.Run(fmt.Sprintf("Connections for %d", tc.id), func(t *testing.T) {
 				connections := g.Connections(tc.id)
 				if len(tc.expectedConnections) != len(connections) {
-					cleanDb(session)
 					t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+					return
 				}
 				for key, expectedSlice := range tc.expectedConnections {
 					if _, exists := connections[key]; !exists {
-						cleanDb(session)
 						t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+						continue
 					}
 					slice := connections[key]
 					if len(expectedSlice) != len(slice) {
-						cleanDb(session)
 						t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
 						continue
 					}
 					for i, expectedValue := range expectedSlice {
 						if expectedValue != slice[i] {
-							cleanDb(session)
 							t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+							break
 						}
 					}
 				}
