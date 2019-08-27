@@ -12,5 +12,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(kstar.Run(g, 2))
+	paths := kstar.Run(g, 1)
+	pathsObjects := make([][]kstar.Edge, 0)
+	for _, p := range paths {
+		path := make([]kstar.Edge, 0)
+		for _, e := range p {
+			path = append(path, *e)
+		}
+		pathsObjects = append(pathsObjects, path)
+	}
+	fmt.Println(pathsObjects)
 }
