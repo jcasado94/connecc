@@ -1,4 +1,4 @@
-package graph
+package drivers
 
 import (
 	"github.com/jcasado94/connecc/mongo"
@@ -12,23 +12,23 @@ const (
 	mongoAvgPriceCol = "averagePrice"
 )
 
-type mongoDriver struct {
+type MongoDriver struct {
 	session   *mongo.Session
 	apService *mongoService.AveragePriceService
 }
 
-func newMongoDriver() (mongoDriver, error) {
+func NewMongoDriver() (MongoDriver, error) {
 	session, err := mongo.NewSession(mongoEndpoint)
 	if err != nil {
-		return mongoDriver{}, err
+		return MongoDriver{}, err
 	}
-	return mongoDriver{
+	return MongoDriver{
 		session:   session,
 		apService: mongoService.NewAveragePriceService(session, mongoDb, mongoAvgPriceCol),
 	}, nil
 }
 
-func (md *mongoDriver) getAvgPrice(s, t int) (float64, error) {
+func (md *MongoDriver) GetAvgPrice(s, t int) (float64, error) {
 	price, err := md.apService.GetAverage(s, t)
 	_, missingDocument := err.(mongoService.AvgDocumentNotFoundError)
 	_, missingEntry := err.(mongoService.AvgNotFoundError)
@@ -42,11 +42,11 @@ func (md *mongoDriver) getAvgPrice(s, t int) (float64, error) {
 	return price, nil
 }
 
-func (md *mongoDriver) createAvgPriceDocument(s, t int) (price float64, err error) {
+func (md *MongoDriver) createAvgPriceDocument(s, t int) (price float64, err error) {
 	item, price := mongoEntity.NewAveragePrice(s, t)
 	return price, md.apService.CreateAveragePrice(&item)
 }
 
-func (md *mongoDriver) createAvgPriceEntry(s, t int) (price float64, err error) {
+func (md *MongoDriver) createAvgPriceEntry(s, t int) (price float64, err error) {
 	return md.apService.AddAverage(s, t)
 }

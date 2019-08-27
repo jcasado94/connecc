@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"github.com/jcasado94/connecc/db"
+	"github.com/jcasado94/connecc/drivers"
 )
 
 type genConnectionInfo struct {
@@ -9,8 +9,8 @@ type genConnectionInfo struct {
 }
 
 type genGraph struct {
-	mDriver            mongoDriver
-	dbDriver           db.Driver
+	mDriver            drivers.MongoDriver
+	dbDriver           drivers.DbDriver
 	connectionsCache   map[int]map[int][]float64
 	genConnectionsInfo map[int]map[int][]*genConnectionInfo
 	nodesCache         map[int]node
@@ -18,11 +18,11 @@ type genGraph struct {
 }
 
 func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*genGraph, error) {
-	driver, err := db.NewDriver(dbEndpoint, dbUsername, dbPw, false)
+	driver, err := drivers.NewDbDriver(dbEndpoint, dbUsername, dbPw, false)
 	if err != nil {
 		return &genGraph{}, err
 	}
-	mDriver, err := newMongoDriver()
+	mDriver, err := drivers.NewMongoDriver()
 	if err != nil {
 		return &genGraph{}, err
 	}
@@ -151,7 +151,7 @@ func (g *genGraph) T() int {
 }
 
 func (g *genGraph) FValue(n int) float64 {
-	avgPrice, err := g.mDriver.getAvgPrice(n, g.T())
+	avgPrice, err := g.mDriver.GetAvgPrice(n, g.T())
 	if err != nil {
 		panic(err)
 	}

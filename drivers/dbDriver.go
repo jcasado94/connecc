@@ -1,4 +1,4 @@
-package db
+package drivers
 
 import (
 	neo4j "github.com/neo4j/neo4j-go-driver/neo4j"
@@ -13,15 +13,15 @@ const (
 	nodeInfoQuery = "MATCH (n) WHERE id(n)=$id RETURN labels(n)[0], properties(n)"
 )
 
-type Driver struct {
+type DbDriver struct {
 	driver  neo4j.Driver
 	session neo4j.Session
 }
 
-func NewDriver(dbEndpoint, dbUsername, dbPw string, write bool) (Driver, error) {
+func NewDbDriver(dbEndpoint, dbUsername, dbPw string, write bool) (DbDriver, error) {
 	driver, err := neo4j.NewDriver(dbEndpoint, neo4j.BasicAuth(dbUsername, dbPw, ""))
 	if err != nil {
-		return Driver{}, err
+		return DbDriver{}, err
 	}
 
 	var session neo4j.Session
@@ -31,16 +31,16 @@ func NewDriver(dbEndpoint, dbUsername, dbPw string, write bool) (Driver, error) 
 		session, err = driver.Session(neo4j.AccessModeRead)
 	}
 	if err != nil {
-		return Driver{}, err
+		return DbDriver{}, err
 	}
 
-	return Driver{
+	return DbDriver{
 		driver,
 		session,
 	}, err
 }
 
-func (d *Driver) NodeInfo(id int) (neo4j.Result, error) {
+func (d *DbDriver) NodeInfo(id int) (neo4j.Result, error) {
 	response, err := d.session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
 			nodeInfoQuery,
@@ -60,7 +60,7 @@ func (d *Driver) NodeInfo(id int) (neo4j.Result, error) {
 	return response.(neo4j.Result), nil
 }
 
-func (d *Driver) NeighboursGen(id int) (neo4j.Result, error) {
+func (d *DbDriver) NeighboursGen(id int) (neo4j.Result, error) {
 	response, err := d.session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
 			neighboursGenQuery,
@@ -81,7 +81,7 @@ func (d *Driver) NeighboursGen(id int) (neo4j.Result, error) {
 	return response.(neo4j.Result), nil
 }
 
-func (d *Driver) neighboursBelongsToCity(id, s int) (neo4j.Result, error) {
+func (d *DbDriver) neighboursBelongsToCity(id, s int) (neo4j.Result, error) {
 	response, err := d.session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
 			neighboursBelongsToCityQuery,
@@ -100,7 +100,7 @@ func (d *Driver) neighboursBelongsToCity(id, s int) (neo4j.Result, error) {
 	return response.(neo4j.Result), nil
 }
 
-func (d *Driver) neighboursBelongsToThroughCity(id int) (neo4j.Result, error) {
+func (d *DbDriver) neighboursBelongsToThroughCity(id int) (neo4j.Result, error) {
 	response, err := d.session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(
 			neighboursBelongsToThroughCityQuery,
@@ -119,7 +119,7 @@ func (d *Driver) neighboursBelongsToThroughCity(id int) (neo4j.Result, error) {
 	return response.(neo4j.Result), nil
 }
 
-func (d *Driver) NeighboursBelongsToCity(id, s int) (neo4j.Result, error) {
+func (d *DbDriver) NeighboursBelongsToCity(id, s int) (neo4j.Result, error) {
 	resultCity, err := d.neighboursBelongsToCity(id, s)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (d *Driver) NeighboursBelongsToCity(id, s int) (neo4j.Result, error) {
 	return resultCity, nil
 }
 
-func (d *Driver) NeighboursBelongsToThroughCity(id, s int) (neo4j.Result, error) {
+func (d *DbDriver) NeighboursBelongsToThroughCity(id, s int) (neo4j.Result, error) {
 	resultThroughCity, err := d.neighboursBelongsToThroughCity(id)
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (d *Driver) NeighboursBelongsToThroughCity(id, s int) (neo4j.Result, error)
 	return resultThroughCity, nil
 }
 
-func (d *Driver) close() {
+func (d *DbDriver) close() {
 	d.driver.Close()
 	d.session.Close()
 }
