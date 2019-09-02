@@ -38,39 +38,12 @@ func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, a
 
 	sc.browser.Dom().Find(".rowsMarket1").Each(func(_ int, s *goquery.Selection) {
 		trip := Trip{}
-		trip.Price, err = strconv.ParseFloat(s.Find(".valueToSortBy").First().Text(), 64)
 		if err != nil {
 			return
 		}
 
-		sFlightNumbers := s.Find(".popUpContent .fi-header-text.text-uppercase.text-right")
-		var arrTime, depTime time.Time
-		s.Find(".flight-info-body").Each(func(i int, s *goquery.Selection) {
-			fieldsDates := s.Find(".fi-text-bold")
-			depHour, depMin, err := processTime(fieldsDates.Get(1).FirstChild.Data)
-			if err != nil {
-				return
-			}
-			if arrTime.IsZero() {
-				depTime = time.Date(year, time.Month(month), day, depHour, depMin, 0, 0, location)
-			} else {
-				depTime = processDayDifference(&arrTime, depHour, depMin)
-			}
-			arrHour, arrMin, err := processTime(fieldsDates.Get(3).FirstChild.Data)
-			if err != nil {
-				return
-			}
-			arrTime = processDayDifference(&depTime, arrHour, arrMin)
-
-			fieldsLocations := s.Find(".fi-text")
-			dep := fieldsLocations.Get(0).FirstChild.Data
-			arr := fieldsLocations.Get(1).FirstChild.Data
-
-			flightNumberSlice := strings.Split(sFlightNumbers.Get(i).FirstChild.Data, " ")
-			flightNumber := fmt.Sprintf("NK%s", flightNumberSlice[len(flightNumberSlice)-1])
-
-			trip.Legs = append(trip.Legs, newLeg(dep, arr, flightNumber, depTime, arrTime))
-		})
+		sc.getFares(s, &trip)
+		sc.getLegs(s, &trip, year, month, day)
 
 		trips = append(trips, &trip)
 	})
@@ -82,15 +55,66 @@ func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, a
 	return trips, nil
 }
 
+func (sc *SpiritScraper) getFares(s *goquery.Selection, trip *Trip) {
+	nineDollarFareSlice := strings.Split(s.Find(".memberItem.radio label").Text(), "$")
+	if len(nineDollarFareSlice) > 1 {
+		price, err := strconv.ParseFloat(nineDollarFareSlice[1], 64)
+		if err != nil {
+			return
+		}
+		trip.Fares = append(trip.Fares, newFare("9Dollar", price))
+	}
+
+	standardFareSlice := strings.Split(s.Find(".standardFare.radio label").Text(), "$")
+	if len(standardFareSlice) > 1 {
+		price, err := strconv.ParseFloat(standardFareSlice[1], 64)
+		if err != nil {
+			return
+		}
+		trip.Fares = append(trip.Fares, newFare("standard", price))
+	}
+}
+
+func (sc *SpiritScraper) getLegs(s *goquery.Selection, trip *Trip, year, month, day int) {
+	sFlightNumbers := s.Find(".popUpContent .fi-header-text.text-uppercase.text-right")
+	var arrTime, depTime time.Time
+	s.Find(".flight-info-body").Each(func(i int, s *goquery.Selection) {
+		fieldsDates := s.Find(".fi-text-bold")
+		depHour, depMin, err := processTime(fieldsDates.Get(1).FirstChild.Data)
+		if err != nil {
+			return
+		}
+		if arrTime.IsZero() {
+			depTime = time.Date(year, time.Month(month), day, depHour, depMin, 0, 0, location)
+		} else {
+			depTime = processDayDifference(&arrTime, depHour, depMin)
+		}
+		arrHour, arrMin, err := processTime(fieldsDates.Get(3).FirstChild.Data)
+		if err != nil {
+			return
+		}
+		arrTime = processDayDifference(&depTime, arrHour, arrMin)
+
+		fieldsLocations := s.Find(".fi-text")
+		dep := fieldsLocations.Get(0).FirstChild.Data
+		arr := fieldsLocations.Get(1).FirstChild.Data
+
+		flightNumberSlice := strings.Split(sFlightNumbers.Get(i).FirstChild.Data, " ")
+		flightNumber := fmt.Sprintf("NK%s", flightNumberSlice[len(flightNumberSlice)-1])
+
+		trip.Legs = append(trip.Legs, newLeg(dep, arr, flightNumber, depTime, arrTime))
+	})
+}
+
 func processTime(time string) (depHour, depMin int, err error) {
-	depTimeSlice := strings.Split(time, " ")
-	depTimeSlice = strings.Split(depTimeSlice[0], ":")
+	timeSlice := strings.Split(time, " ")
+	depTimeSlice := strings.Split(timeSlice[0], ":")
 	depHour, err = strconv.Atoi(depTimeSlice[0])
 	depMin, err = strconv.Atoi(depTimeSlice[1])
 	if err != nil {
 		return 0, 0, err
 	}
-	if depTimeSlice[1] == "PM" {
+	if timeSlice[1] == "PM" {
 		depHour += 12
 	}
 	return depHour, depMin, nil

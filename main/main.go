@@ -8,7 +8,7 @@ import (
 
 func main() {
 	scraper := scraping.NewSpiritScraper()
-	trips, _ := scraper.GetTrips("BOS", "DEN", 31, 8, 2019, 1, 0, 0)
+	trips, _ := scraper.GetTrips("BOS", "DEN", 2, 9, 2019, 1, 0, 0)
 	for _, trip := range trips {
 		fmt.Println(trip)
 	}
