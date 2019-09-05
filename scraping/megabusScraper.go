@@ -40,104 +40,125 @@ func (sc *MegabusScraper) GetTrips(departure, arrival string, day, month, year, 
 		return []*Trip{}, err
 	}
 	document := string(body)
-
-	r, err := regexp.Compile(`window.SEARCH_RESULTS\s?=\s?(?P<Json>{.*})`)
+	js, err := getJourniesJson(document)
 	if err != nil {
 		return []*Trip{}, err
 	}
-	journies := r.FindStringSubmatch(document)
-	journiesBytes := []byte(journies[1])
-	var js JsonMbJournies
-	err = json.Unmarshal(journiesBytes, &js)
 
 	for _, j := range js.Journeys {
 		if len(j.Legs) == 1 {
-			depTime, err := time.Parse(time.RFC3339, j.Legs[0].DepartureDateTime)
+			err = sc.getOneLegTrip(&j, trips)
 			if err != nil {
 				return []*Trip{}, err
 			}
-			arrTime, err := time.Parse(time.RFC3339, j.Legs[0].ArrivalDateTime)
-			if err != nil {
-				return []*Trip{}, err
-			}
-			trips = append(trips, newTrip(
-				[]*Fare{newFare("standard", j.Price)},
-				[]*Leg{newLeg(j.Legs[0].Origin.CityId, j.Legs[0].Destination.CityId, "", depTime, arrTime)}))
 		} else {
-			// send query to get mid cities
-			url = fmt.Sprintf("https://us.megabus.com/journey-planner/api/itinerary?journeyId=%s", j.JourneyId)
-			resp, err = sc.client.Get(url)
+			err = sc.getSeveralLegsTrip(&j, &trips, year, month, day, departure, arrival)
 			if err != nil {
-				log.Printf("Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
-				continue
+				return []*Trip{}, err
 			}
-			body, err = ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.Printf("Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
-				continue
-			}
-			var its JsonMbItineraries
-			err = json.Unmarshal(body, &its)
-			if err != nil {
-				log.Printf("Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
-				continue
-			}
-			var dep, arr string
-			var depTime, arrTime time.Time
-			var legs []*Leg
-			for i, it := range its.ScheduledStops {
-				if it.Ordinal == 0 {
-					if dep != "" {
-						arrStop := its.ScheduledStops[i-1]
-						arr = arrStop.CityId
-						arrivalTimeSlice := strings.Split(arrStop.ArrivalTime, ":")
-						arrivalHourString, arrivalMinString := arrivalTimeSlice[0], arrivalTimeSlice[1]
-						arrivalHour, err := strconv.Atoi(arrivalHourString)
-						arrivalMin, err := strconv.Atoi(arrivalMinString)
-						if err != nil {
-							log.Printf("Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
-							continue
-						}
-						arrTime = processDayDifference(&depTime, arrivalHour, arrivalMin)
-						legs = append(legs, newLeg(dep, arr, "", depTime, arrTime))
-					}
-					depTimeSlice := strings.Split(it.DepartureTime, ":")
-					depHourString, depMinString := depTimeSlice[0], depTimeSlice[1]
-					depHour, err := strconv.Atoi(depHourString)
-					depMin, err := strconv.Atoi(depMinString)
-					if err != nil {
-						log.Printf("Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
-						continue
-					}
-					if arrTime.IsZero() {
-						depTime = time.Date(year, time.Month(month), day, depHour, depMin, 0, 0, time.UTC)
-					} else {
-						depTime = processDayDifference(&arrTime, depHour, depMin)
-					}
-					dep = it.CityId
-				} else if i == len(its.ScheduledStops)-1 {
-					arrivalTimeSlice := strings.Split(it.ArrivalTime, ":")
-					arrivalHourString, arrivalMinString := arrivalTimeSlice[0], arrivalTimeSlice[1]
-					arrivalHour, err := strconv.Atoi(arrivalHourString)
-					arrivalMin, err := strconv.Atoi(arrivalMinString)
-					if err != nil {
-						log.Printf("Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
-						continue
-					}
-					arrTime = processDayDifference(&depTime, arrivalHour, arrivalMin)
-					arr = it.CityId
-					legs = append(legs, newLeg(dep, arr, "", depTime, arrTime))
-				}
-			}
-			trips = append(trips, newTrip(
-				[]*Fare{newFare("standard", j.Price)},
-				legs,
-			))
 		}
 	}
 
 	return trips, nil
 
+}
+
+func (sc *MegabusScraper) getOneLegTrip(j *JsonMbJourney, trips []*Trip) error {
+	depTime, err := time.Parse(time.RFC3339, j.Legs[0].DepartureDateTime)
+	if err != nil {
+		return err
+	}
+	arrTime, err := time.Parse(time.RFC3339, j.Legs[0].ArrivalDateTime)
+	if err != nil {
+		return err
+	}
+	trips = append(trips, newTrip(
+		[]*Fare{newFare("standard", j.Price)},
+		[]*Leg{newLeg(j.Legs[0].Origin.CityId, j.Legs[0].Destination.CityId, "", depTime, arrTime)}))
+
+	return nil
+}
+
+func (sc *MegabusScraper) getSeveralLegsTrip(j *JsonMbJourney, trips *[]*Trip, year, month, day int, departure, arrival string) error {
+	url := fmt.Sprintf("https://us.megabus.com/journey-planner/api/itinerary?journeyId=%s", j.JourneyId)
+	resp, err := sc.client.Get(url)
+	if err != nil {
+		return err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var its JsonMbItineraries
+	err = json.Unmarshal(body, &its)
+	if err != nil {
+		return err
+	}
+	var dep, arr string
+	var depTime, arrTime time.Time
+	var legs []*Leg
+	for i, it := range its.ScheduledStops {
+		if it.Ordinal == 0 {
+			depHour, depMin, err := getHourMinFromTimeString(it.DepartureTime)
+			if err != nil {
+				log.Printf("Megabus. Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
+				continue
+			}
+			if dep != "" {
+				arrStop := its.ScheduledStops[i-1]
+				arr = arrStop.CityId
+				arrivalHour, arrivalMin, err := getHourMinFromTimeString(arrStop.ArrivalTime)
+				if err != nil {
+					log.Printf("Megabus. Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
+					continue
+				}
+				arrTime = processDayDifference(&depTime, arrivalHour, arrivalMin)
+				legs = append(legs, newLeg(dep, arr, "", depTime, arrTime))
+				depTime = processDayDifference(&arrTime, depHour, depMin)
+			} else {
+				depTime = time.Date(year, time.Month(month), day, depHour, depMin, 0, 0, time.UTC)
+			}
+			dep = it.CityId
+		} else if i == len(its.ScheduledStops)-1 {
+			arrivalHour, arrivalMin, err := getHourMinFromTimeString(it.ArrivalTime)
+			if err != nil {
+				log.Printf("Megabus. Couldn't retrieve itinerary for journeyId:%s. [%s --> %s], %d/%d/%d", j.JourneyId, departure, arrival, day, month, year)
+				continue
+			}
+			arrTime = processDayDifference(&depTime, arrivalHour, arrivalMin)
+			arr = it.CityId
+			legs = append(legs, newLeg(dep, arr, "", depTime, arrTime))
+		}
+	}
+	*trips = append(*trips, newTrip(
+		[]*Fare{newFare("standard", j.Price)},
+		legs,
+	))
+
+	return nil
+}
+
+func getHourMinFromTimeString(time string) (hour, min int, err error) {
+	timeSlice := strings.Split(time, ":")
+	hourString, minString := timeSlice[0], timeSlice[1]
+	hour, err = strconv.Atoi(hourString)
+	min, err = strconv.Atoi(minString)
+	if err != nil {
+		return 0, 0, err
+	}
+	return hour, min, nil
+}
+
+func getJourniesJson(document string) (JsonMbJournies, error) {
+	r, err := regexp.Compile(`window.SEARCH_RESULTS\s?=\s?(?P<Json>{.*})`)
+	if err != nil {
+		return JsonMbJournies{}, err
+	}
+	journies := r.FindStringSubmatch(document)
+	journiesBytes := []byte(journies[1])
+	var js JsonMbJournies
+	err = json.Unmarshal(journiesBytes, &js)
+	return js, err
 }
 
 type JsonMbJournies struct {

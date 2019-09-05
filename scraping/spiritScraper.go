@@ -100,8 +100,8 @@ func (sc *SpiritScraper) getLegs(s *goquery.Selection, year, month, day int) []*
 		arrTime = processDayDifference(&depTime, arrHour, arrMin)
 
 		fieldsLocations := s.Find(".fi-text")
-		dep := fieldsLocations.Get(0).FirstChild.Data
-		arr := fieldsLocations.Get(1).FirstChild.Data
+		dep := strings.TrimSpace(fieldsLocations.Get(0).FirstChild.Data)
+		arr := strings.TrimSpace(fieldsLocations.Get(1).FirstChild.Data)
 
 		flightNumberSlice := strings.Split(sFlightNumbers.Get(i).FirstChild.Data, " ")
 		flightNumber := fmt.Sprintf("NK%s", flightNumberSlice[len(flightNumberSlice)-1])

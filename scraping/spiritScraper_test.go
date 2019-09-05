@@ -14,29 +14,28 @@ func TestGetTripsSpirit(t *testing.T) {
 		t.Error("Error while getting the trips")
 		return
 	}
-	location, _ := time.LoadLocation("America/New_York")
 
 	expectedTrips := []Trip{
 		Trip{
 			Fares: []*Fare{&Fare{Price: 158.18, Type: "standard"}},
 			Legs: []*Leg{
-				&Leg{Dep: "Boston, MA", Arr: "Baltimore, MD / Washington, DC AREA", DepTime: time.Date(2019, time.Month(9), 13, 7, 45, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 9, 24, 0, 0, location), Id: "NK2025"},
-				&Leg{Dep: "Baltimore, MD / Washington, DC AREA", Arr: "Minneapolis/St. Paul, MN", DepTime: time.Date(2019, time.Month(9), 13, 11, 55, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 13, 32, 0, 0, location), Id: "NK381"},
-				&Leg{Dep: "Minneapolis/St. Paul, MN", Arr: "Denver, CO", DepTime: time.Date(2019, time.Month(9), 13, 14, 37, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 15, 48, 0, 0, location), Id: "NK381"},
+				&Leg{Dep: "Boston, MA", Arr: "Baltimore, MD / Washington, DC AREA", DepTime: time.Date(2019, time.Month(9), 13, 7, 45, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 9, 24, 0, 0, time.UTC), Id: "NK2025"},
+				&Leg{Dep: "Baltimore, MD / Washington, DC AREA", Arr: "Minneapolis/St. Paul, MN", DepTime: time.Date(2019, time.Month(9), 13, 11, 55, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 13, 32, 0, 0, time.UTC), Id: "NK381"},
+				&Leg{Dep: "Minneapolis/St. Paul, MN", Arr: "Denver, CO", DepTime: time.Date(2019, time.Month(9), 13, 14, 37, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 15, 48, 0, 0, time.UTC), Id: "NK381"},
 			},
 		},
 		Trip{
 			Fares: []*Fare{&Fare{Price: 153.98, Type: "standard"}},
 			Legs: []*Leg{
-				&Leg{Dep: "Boston, MA", Arr: "Baltimore, MD / Washington, DC AREA", DepTime: time.Date(2019, time.Month(9), 13, 7, 45, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 9, 24, 0, 0, location), Id: "NK2025"},
-				&Leg{Dep: "Baltimore, MD / Washington, DC AREA", Arr: "Denver, CO", DepTime: time.Date(2019, time.Month(9), 13, 20, 19, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 22, 17, 0, 0, location), Id: "NK115"},
+				&Leg{Dep: "Boston, MA", Arr: "Baltimore, MD / Washington, DC AREA", DepTime: time.Date(2019, time.Month(9), 13, 7, 45, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 9, 24, 0, 0, time.UTC), Id: "NK2025"},
+				&Leg{Dep: "Baltimore, MD / Washington, DC AREA", Arr: "Denver, CO", DepTime: time.Date(2019, time.Month(9), 13, 20, 19, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 22, 17, 0, 0, time.UTC), Id: "NK115"},
 			},
 		},
 		Trip{
 			Fares: []*Fare{&Fare{Price: 122.08, Type: "9Dollar"}, &Fare{Price: 171.98, Type: "standard"}},
 			Legs: []*Leg{
-				&Leg{Dep: "Boston, MA", Arr: "Fort Lauderdale, FL / Miami, FL AREA", DepTime: time.Date(2019, time.Month(9), 13, 15, 35, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 19, 04, 0, 0, location), Id: "NK1611"},
-				&Leg{Dep: "Fort Lauderdale, FL / Miami, FL AREA", Arr: "Denver, CO", DepTime: time.Date(2019, time.Month(9), 13, 21, 45, 0, 0, location), ArrTime: time.Date(2019, time.Month(9), 13, 23, 59, 0, 0, location), Id: "NK355"},
+				&Leg{Dep: "Boston, MA", Arr: "Fort Lauderdale, FL / Miami, FL AREA", DepTime: time.Date(2019, time.Month(9), 13, 15, 35, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 19, 04, 0, 0, time.UTC), Id: "NK1611"},
+				&Leg{Dep: "Fort Lauderdale, FL / Miami, FL AREA", Arr: "Denver, CO", DepTime: time.Date(2019, time.Month(9), 13, 21, 45, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 13, 23, 59, 0, 0, time.UTC), Id: "NK355"},
 			},
 		},
 	}
