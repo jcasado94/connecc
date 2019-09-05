@@ -1,0 +1,112 @@
+{
+  "scheduledStops": [
+  {
+  "location": "34th St b/t 11th Ave and 12th Ave",
+  "cityName": "New York, NY",
+  "cityId": "123",
+  "ordinal": 0,
+  "carrier": "megabus",
+  "carrierIcon": "megabus.gif",
+  "departureTime": "17:00",
+  "actualDepartureTime": null,
+  "arrivalTime": null,
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "Union Station.",
+  "cityName": "Washington, DC",
+  "cityId": "142",
+  "ordinal": 1,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": null,
+  "actualDepartureTime": null,
+  "arrivalTime": "21:15",
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "Union Station.",
+  "cityName": "Washington, DC",
+  "cityId": "142",
+  "ordinal": 0,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": "23:20",
+  "actualDepartureTime": null,
+  "arrivalTime": null,
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "The Plaza at Main Street Station",
+  "cityName": "Richmond, VA",
+  "cityId": "132",
+  "ordinal": 1,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": "01:30",
+  "actualDepartureTime": null,
+  "arrivalTime": "01:30",
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "Durham Transportation Center - Bus Bay T",
+  "cityName": "Durham, NC",
+  "cityId": "131",
+  "ordinal": 2,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": "05:00",
+  "actualDepartureTime": null,
+  "arrivalTime": "05:00",
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "Bus Bay #3 - Arrowood Light Rail Station (Blue Line)",
+  "cityName": "Charlotte, NC",
+  "cityId": "99",
+  "ordinal": 3,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": "08:25",
+  "actualDepartureTime": null,
+  "arrivalTime": "08:25",
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "Athens Multi-Modal Trans. Ctr - 775 East Broad St",
+  "cityName": "Athens, GA",
+  "cityId": "302",
+  "ordinal": 4,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": "12:10",
+  "actualDepartureTime": null,
+  "arrivalTime": "12:10",
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  },
+  {
+  "location": "MARTA Civic Center - 435 W Peachtree St NW",
+  "cityName": "Atlanta, GA",
+  "cityId": "289",
+  "ordinal": 5,
+  "carrier": null,
+  "carrierIcon": null,
+  "departureTime": null,
+  "actualDepartureTime": null,
+  "arrivalTime": "13:45",
+  "predictedArrivalTime": null,
+  "actualArrivalTime": null
+  }
+  ],
+  "origin": "New York, NY",
+  "destination": "Atlanta, GA",
+  "delayStatus": null,
+  "predictedArrivalTime": null
+  }
