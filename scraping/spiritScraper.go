@@ -42,8 +42,8 @@ func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, a
 			return
 		}
 
-		sc.getFares(s, &trip)
-		sc.getLegs(s, &trip, year, month, day)
+		trip.Fares = sc.getFares(s)
+		trip.Legs = sc.getLegs(s, year, month, day)
 
 		trips = append(trips, &trip)
 	})
@@ -55,27 +55,31 @@ func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, a
 	return trips, nil
 }
 
-func (sc *SpiritScraper) getFares(s *goquery.Selection, trip *Trip) {
+func (sc *SpiritScraper) getFares(s *goquery.Selection) []*Fare {
+	var fares []*Fare
 	nineDollarFareSlice := strings.Split(s.Find(".memberItem.radio label").Text(), "$")
 	if len(nineDollarFareSlice) > 1 {
 		price, err := strconv.ParseFloat(nineDollarFareSlice[1], 64)
 		if err != nil {
-			return
+			return nil
 		}
-		trip.Fares = append(trip.Fares, newFare("9Dollar", price))
+		fares = append(fares, newFare("9Dollar", price))
 	}
 
 	standardFareSlice := strings.Split(s.Find(".standardFare.radio label").Text(), "$")
 	if len(standardFareSlice) > 1 {
 		price, err := strconv.ParseFloat(standardFareSlice[1], 64)
 		if err != nil {
-			return
+			return nil
 		}
-		trip.Fares = append(trip.Fares, newFare("standard", price))
+		fares = append(fares, newFare("standard", price))
 	}
+
+	return fares
 }
 
-func (sc *SpiritScraper) getLegs(s *goquery.Selection, trip *Trip, year, month, day int) {
+func (sc *SpiritScraper) getLegs(s *goquery.Selection, year, month, day int) []*Leg {
+	var legs []*Leg
 	sFlightNumbers := s.Find(".popUpContent .fi-header-text.text-uppercase.text-right")
 	var arrTime, depTime time.Time
 	s.Find(".flight-info-body").Each(func(i int, s *goquery.Selection) {
@@ -85,7 +89,7 @@ func (sc *SpiritScraper) getLegs(s *goquery.Selection, trip *Trip, year, month, 
 			return
 		}
 		if arrTime.IsZero() {
-			depTime = time.Date(year, time.Month(month), day, depHour, depMin, 0, 0, location)
+			depTime = time.Date(year, time.Month(month), day, depHour, depMin, 0, 0, time.UTC)
 		} else {
 			depTime = processDayDifference(&arrTime, depHour, depMin)
 		}
@@ -102,8 +106,10 @@ func (sc *SpiritScraper) getLegs(s *goquery.Selection, trip *Trip, year, month, 
 		flightNumberSlice := strings.Split(sFlightNumbers.Get(i).FirstChild.Data, " ")
 		flightNumber := fmt.Sprintf("NK%s", flightNumberSlice[len(flightNumberSlice)-1])
 
-		trip.Legs = append(trip.Legs, newLeg(dep, arr, flightNumber, depTime, arrTime))
+		legs = append(legs, newLeg(dep, arr, flightNumber, depTime, arrTime))
 	})
+
+	return legs
 }
 
 func processTime(time string) (depHour, depMin int, err error) {

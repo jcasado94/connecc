@@ -1,0 +1,658 @@
+{  
+  "cities":[  
+     {  
+        "id":89,
+        "name":"Albany, NY",
+        "latitude":42.65144,
+        "longitude":-73.75525
+     },
+     {  
+        "id":466,
+        "name":"Anaheim, CA",
+        "latitude":33.834206,
+        "longitude":-117.91557
+     },
+     {  
+        "id":91,
+        "name":"Ann Arbor, MI",
+        "latitude":42.28187,
+        "longitude":-83.74848
+     },
+     {  
+        "id":486,
+        "name":"Annapolis, MD",
+        "latitude":38.97682,
+        "longitude":-76.55678
+     },
+     {  
+        "id":485,
+        "name":"Arlington, VA",
+        "latitude":38.898106,
+        "longitude":-77.18146
+     },
+     {  
+        "id":302,
+        "name":"Athens, GA",
+        "latitude":33.95813,
+        "longitude":-83.37325
+     },
+     {  
+        "id":289,
+        "name":"Atlanta, GA",
+        "latitude":33.74831,
+        "longitude":-84.39111
+     },
+     {  
+        "id":320,
+        "name":"Austin, TX",
+        "latitude":30.2676,
+        "longitude":-97.74298
+     },
+     {  
+        "id":143,
+        "name":"Baltimore, MD",
+        "latitude":39.37831,
+        "longitude":-76.46223
+     },
+     {  
+        "id":319,
+        "name":"Baton Rouge, LA",
+        "latitude":30.44334,
+        "longitude":-91.18699
+     },
+     {  
+        "id":93,
+        "name":"Binghamton, NY",
+        "latitude":42.09868,
+        "longitude":-75.91127
+     },
+     {  
+        "id":292,
+        "name":"Birmingham, AL",
+        "latitude":33.52029,
+        "longitude":-86.8115
+     },
+     {  
+        "id":479,
+        "name":"Blacksburg, VA",
+        "latitude":37.22997,
+        "longitude":-80.41837
+     },
+     {  
+        "id":517,
+        "name":"Bloomington, IL",
+        "latitude":40.48247,
+        "longitude":-88.992004
+     },
+     {  
+        "id":94,
+        "name":"Boston, MA",
+        "latitude":42.35863,
+        "longitude":-71.0567
+     },
+     {  
+        "id":273,
+        "name":"Buffalo Airport, NY",
+        "latitude":42.93106,
+        "longitude":-78.73763
+     },
+     {  
+        "id":95,
+        "name":"Buffalo, NY",
+        "latitude":42.88544,
+        "longitude":-78.87846
+     },
+     {  
+        "id":420,
+        "name":"Burbank, CA",
+        "latitude":34.18312,
+        "longitude":-118.320694
+     },
+     {  
+        "id":96,
+        "name":"Burlington, VT",
+        "latitude":44.47592,
+        "longitude":-73.21323
+     },
+     {  
+        "id":99,
+        "name":"Charlotte, NC",
+        "latitude":35.2225,
+        "longitude":-80.83754
+     },
+     {  
+        "id":512,
+        "name":"Charlottesville, VA",
+        "latitude":38.0318,
+        "longitude":-78.492546
+     },
+     {  
+        "id":290,
+        "name":"Chattanooga, TN",
+        "latitude":35.04644,
+        "longitude":-85.30946
+     },
+     {  
+        "id":507,
+        "name":"Chicago Midway Intl Airport",
+        "latitude":41.78879,
+        "longitude":-87.73936
+     },
+     {  
+        "id":504,
+        "name":"Chicago O'Hare Intl Airport",
+        "latitude":41.97896,
+        "longitude":-87.90481
+     },
+     {  
+        "id":100,
+        "name":"Chicago, IL",
+        "latitude":41.88415,
+        "longitude":-87.63241
+     },
+     {  
+        "id":101,
+        "name":"Christiansburg, VA",
+        "latitude":37.13014,
+        "longitude":-80.40841
+     },
+     {  
+        "id":102,
+        "name":"Cincinnati, OH",
+        "latitude":39.10661,
+        "longitude":-84.50455
+     },
+     {  
+        "id":103,
+        "name":"Cleveland, OH",
+        "latitude":41.50471,
+        "longitude":-81.69074
+     },
+     {  
+        "id":454,
+        "name":"Columbia, SC",
+        "latitude":34.011723,
+        "longitude":-81.06262
+     },
+     {  
+        "id":503,
+        "name":"Crestwood, IL",
+        "latitude":41.639606,
+        "longitude":-87.73945
+     },
+     {  
+        "id":317,
+        "name":"Dallas, TX",
+        "latitude":32.795975,
+        "longitude":-97.02723
+     },
+     {  
+        "id":478,
+        "name":"Daytona Beach, FL",
+        "latitude":29.218554,
+        "longitude":-81.09627
+     },
+     {  
+        "id":106,
+        "name":"Des Moines, IA",
+        "latitude":41.58329,
+        "longitude":-93.62697
+     },
+     {  
+        "id":107,
+        "name":"Detroit, MI",
+        "latitude":42.33168,
+        "longitude":-83.04792
+     },
+     {  
+        "id":484,
+        "name":"Dulles Washington Airport (IAD), VA",
+        "latitude":38.955585,
+        "longitude":-77.44841
+     },
+     {  
+        "id":131,
+        "name":"Durham, NC",
+        "latitude":35.985588,
+        "longitude":-78.896645
+     },
+     {  
+        "id":498,
+        "name":"East Troy, WI",
+        "latitude":42.8061,
+        "longitude":-88.3698
+     },
+     {  
+        "id":455,
+        "name":"Fayetteville, NC",
+        "latitude":35.063725,
+        "longitude":-78.89557
+     },
+     {  
+        "id":462,
+        "name":"Fort Lauderdale, FL",
+        "latitude":26.067268,
+        "longitude":-80.17479
+     },
+     {  
+        "id":483,
+        "name":"Front Royal, VA",
+        "latitude":38.91753,
+        "longitude":-78.19352
+     },
+     {  
+        "id":296,
+        "name":"Gainesville, FL",
+        "latitude":29.65195,
+        "longitude":-82.32318
+     },
+     {  
+        "id":110,
+        "name":"Hampton, VA",
+        "latitude":37.02779,
+        "longitude":-76.34512
+     },
+     {  
+        "id":111,
+        "name":"Harrisburg, PA",
+        "latitude":40.25993,
+        "longitude":-76.88234
+     },
+     {  
+        "id":482,
+        "name":"Harrisonburg, VA",
+        "latitude":38.45163,
+        "longitude":-78.8697
+     },
+     {  
+        "id":502,
+        "name":"Highland, IN",
+        "latitude":41.54884,
+        "longitude":-87.448586
+     },
+     {  
+        "id":318,
+        "name":"Houston, TX",
+        "latitude":29.747784,
+        "longitude":-95.36257
+     },
+     {  
+        "id":115,
+        "name":"Indianapolis, IN",
+        "latitude":39.76691,
+        "longitude":-86.14996
+     },
+     {  
+        "id":116,
+        "name":"Iowa City (Coralville), IA",
+        "latitude":41.65782,
+        "longitude":-91.52653
+     },
+     {  
+        "id":511,
+        "name":"Ithaca, NY",
+        "latitude":42.42064,
+        "longitude":-76.509384
+     },
+     {  
+        "id":295,
+        "name":"Jacksonville, FL",
+        "latitude":30.33138,
+        "longitude":-81.6558
+     },
+     {  
+        "id":489,
+        "name":"Janesville, WI",
+        "latitude":42.677162,
+        "longitude":-88.99351
+     },
+     {  
+        "id":477,
+        "name":"Lakeland, FL",
+        "latitude":28.082027,
+        "longitude":-81.96597
+     },
+     {  
+        "id":417,
+        "name":"Las Vegas, NV",
+        "latitude":36.17191,
+        "longitude":-115.13997
+     },
+     {  
+        "id":480,
+        "name":"Lexington, VA",
+        "latitude":37.775757,
+        "longitude":-79.43276
+     },
+     {  
+        "id":472,
+        "name":"Lincoln, NE",
+        "latitude":40.81362,
+        "longitude":-96.70774
+     },
+     {  
+        "id":324,
+        "name":"Little Rock, AR",
+        "latitude":34.74865,
+        "longitude":-92.27449
+     },
+     {  
+        "id":390,
+        "name":"Los Angeles, CA",
+        "latitude":34.05349,
+        "longitude":-118.24532
+     },
+     {  
+        "id":298,
+        "name":"Louisville, KY",
+        "latitude":38.25486,
+        "longitude":-85.7664
+     },
+     {  
+        "id":119,
+        "name":"Madison, WI",
+        "latitude":43.07295,
+        "longitude":-89.38669
+     },
+     {  
+        "id":120,
+        "name":"Memphis, TN",
+        "latitude":35.14976,
+        "longitude":-90.04925
+     },
+     {  
+        "id":450,
+        "name":"Miami, FL",
+        "latitude":25.750383,
+        "longitude":-80.23041
+     },
+     {  
+        "id":501,
+        "name":"Michigan City, IN",
+        "latitude":41.71723,
+        "longitude":-86.891
+     },
+     {  
+        "id":499,
+        "name":"Milton, WI",
+        "latitude":42.803146,
+        "longitude":-88.97193
+     },
+     {  
+        "id":121,
+        "name":"Milwaukee, WI",
+        "latitude":43.04181,
+        "longitude":-87.90684
+     },
+     {  
+        "id":144,
+        "name":"Minneapolis, MN",
+        "latitude":44.97903,
+        "longitude":-93.26493
+     },
+     {  
+        "id":294,
+        "name":"Mobile, AL",
+        "latitude":30.68639,
+        "longitude":-88.05324
+     },
+     {  
+        "id":473,
+        "name":"Moline, IL",
+        "latitude":41.444786,
+        "longitude":-90.50194
+     },
+     {  
+        "id":293,
+        "name":"Montgomery, AL",
+        "latitude":32.38012,
+        "longitude":-86.30063
+     },
+     {  
+        "id":463,
+        "name":"Montpelier, VT",
+        "latitude":44.261177,
+        "longitude":-72.57671
+     },
+     {  
+        "id":299,
+        "name":"Morgantown, WV",
+        "latitude":39.63037,
+        "longitude":-79.95785
+     },
+     {  
+        "id":497,
+        "name":"Muskego, WI",
+        "latitude":42.90221,
+        "longitude":-88.1517
+     },
+     {  
+        "id":291,
+        "name":"Nashville, TN",
+        "latitude":36.167854,
+        "longitude":-86.78331
+     },
+     {  
+        "id":305,
+        "name":"New Brunswick, NJ",
+        "latitude":40.493958,
+        "longitude":-74.4437
+     },
+     {  
+        "id":303,
+        "name":"New Orleans, LA",
+        "latitude":29.95369,
+        "longitude":-90.07771
+     },
+     {  
+        "id":123,
+        "name":"New York, NY",
+        "latitude":40.74447,
+        "longitude":-73.995445
+     },
+     {  
+        "id":389,
+        "name":"Newark, DE",
+        "latitude":39.67912,
+        "longitude":-75.7685
+     },
+     {  
+        "id":513,
+        "name":"Notre Dame, IN",
+        "latitude":41.695282,
+        "longitude":-86.23856
+     },
+     {  
+        "id":413,
+        "name":"Oakland, CA",
+        "latitude":37.805214,
+        "longitude":-122.29455
+     },
+     {  
+        "id":126,
+        "name":"Omaha, NE",
+        "latitude":41.26069,
+        "longitude":-95.94059
+     },
+     {  
+        "id":297,
+        "name":"Orlando, FL",
+        "latitude":28.53823,
+        "longitude":-81.37739
+     },
+     {  
+        "id":127,
+        "name":"Philadelphia, PA",
+        "latitude":39.95228,
+        "longitude":-75.16245
+     },
+     {  
+        "id":128,
+        "name":"Pittsburgh, PA",
+        "latitude":40.44501,
+        "longitude":-79.99714
+     },
+     {  
+        "id":129,
+        "name":"Portland, ME",
+        "latitude":43.659706,
+        "longitude":-70.25883
+     },
+     {  
+        "id":304,
+        "name":"Princeton, NJ",
+        "latitude":40.349915,
+        "longitude":-74.65879
+     },
+     {  
+        "id":132,
+        "name":"Richmond, VA",
+        "latitude":37.5407,
+        "longitude":-77.43365
+     },
+     {  
+        "id":133,
+        "name":"Ridgewood, NJ",
+        "latitude":40.98151,
+        "longitude":-74.11261
+     },
+     {  
+        "id":416,
+        "name":"Riverside, CA",
+        "latitude":33.98163,
+        "longitude":-117.37388
+     },
+     {  
+        "id":134,
+        "name":"Rochester, NY",
+        "latitude":43.1555,
+        "longitude":-77.61603
+     },
+     {  
+        "id":487,
+        "name":"Rockford, IL",
+        "latitude":42.273407,
+        "longitude":-89.08342
+     },
+     {  
+        "id":415,
+        "name":"Sacramento, CA",
+        "latitude":38.57906,
+        "longitude":-121.49101
+     },
+     {  
+        "id":321,
+        "name":"San Antonio, TX",
+        "latitude":29.42428,
+        "longitude":-98.4947
+     },
+     {  
+        "id":414,
+        "name":"San Francisco, CA",
+        "latitude":37.77712,
+        "longitude":-122.41964
+     },
+     {  
+        "id":412,
+        "name":"San Jose, CA",
+        "latitude":37.33858,
+        "longitude":-121.88557
+     },
+     {  
+        "id":135,
+        "name":"Secaucus, NJ",
+        "latitude":40.78828,
+        "longitude":-74.05496
+     },
+     {  
+        "id":488,
+        "name":"South Beloit, IL",
+        "latitude":42.490013,
+        "longitude":-88.98892
+     },
+     {  
+        "id":500,
+        "name":"South Bend, IN",
+        "latitude":41.66213,
+        "longitude":-86.288666
+     },
+     {  
+        "id":136,
+        "name":"St Louis, MO",
+        "latitude":38.62856,
+        "longitude":-90.21636
+     },
+     {  
+        "id":430,
+        "name":"St. Paul, MN",
+        "latitude":44.953136,
+        "longitude":-93.19153
+     },
+     {  
+        "id":137,
+        "name":"State College, PA",
+        "latitude":40.79373,
+        "longitude":-77.8607
+     },
+     {  
+        "id":481,
+        "name":"Staunton, VA",
+        "latitude":38.138535,
+        "longitude":-79.04684
+     },
+     {  
+        "id":139,
+        "name":"Syracuse, NY",
+        "latitude":43.04999,
+        "longitude":-76.14739
+     },
+     {  
+        "id":451,
+        "name":"Tampa, FL",
+        "latitude":27.937393,
+        "longitude":-82.478485
+     },
+     {  
+        "id":470,
+        "name":"Tampa\\Mango (P&R), FL",
+        "latitude":27.988092,
+        "longitude":-82.30242
+     },
+     {  
+        "id":140,
+        "name":"Toledo, OH",
+        "latitude":41.65381,
+        "longitude":-83.53626
+     },
+     {  
+        "id":145,
+        "name":"Toronto, ON",
+        "latitude":43.64856,
+        "longitude":-79.38532
+     },
+     {  
+        "id":515,
+        "name":"Valdosta, GA",
+        "latitude":30.832703,
+        "longitude":-83.27849
+     },
+     {  
+        "id":475,
+        "name":"Virginia Beach, VA",
+        "latitude":36.752365,
+        "longitude":-76.05045
+     },
+     {  
+        "id":142,
+        "name":"Washington, DC",
+        "latitude":38.89037,
+        "longitude":-77.03196
+     },
+     {  
+        "id":490,
+        "name":"Whitewater, WI",
+        "latitude":42.84309,
+        "longitude":-88.74191
+     }
+  ]
+}

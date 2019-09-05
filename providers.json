@@ -1,0 +1,15 @@
+{
+  "spirit": {
+     "id": 0,
+    "fareTypes": [
+      "standard", "9Dollar"
+    ]
+  },
+  "megabus": {
+    "id": 1,
+    "fareTypes": [
+      "standard"
+    ]
+   }
+   
+}

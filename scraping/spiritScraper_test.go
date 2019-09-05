@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-func TestGetTrips(t *testing.T) {
+func TestGetTripsSpirit(t *testing.T) {
 	sc := NewSpiritScraper()
-	sc.browser.SetTransport(newMockRoundTripper("./scrapingSites/spiritAirlines.html"))
+	sc.browser.SetTransport(newSingularMockRoundTripper("./testScrapingSites/spiritAirlines.html", "text/html; charset=utf-8"))
 	trips, err := sc.GetTrips("BOS", "DEN", 13, 9, 2019, 1, 0, 0)
 	if err != nil {
 		t.Error("Error while getting the trips")
@@ -41,22 +41,22 @@ func TestGetTrips(t *testing.T) {
 		},
 	}
 	if len(expectedTrips) != len(trips) {
-		t.Error("Trip slices lengths differ")
+		t.Errorf("Trip slices lengths differ. Want \n%v, \ngot %v", expectedTrips, trips)
 	}
 	for i, want := range expectedTrips {
 		have := trips[i]
 		t.Run(fmt.Sprintf("Trip %d", i), func(t *testing.T) {
 			if len(want.Legs) != len(have.Legs) {
-				t.Error("Legs length differ")
+				t.Errorf("Legs slices differ. Want \n%v, \ngot \n%v", want.Legs, have.Legs)
 				return
 			}
 			if len(want.Fares) != len(have.Fares) {
-				t.Error("Fares length differ")
+				t.Errorf("Fares slices differ. Want \n%v, \ngot \n%v", want.Fares, have.Fares)
 				return
 			}
 			for j, el := range want.Legs {
 				l := have.Legs[j]
-				if l.Equals(el) {
+				if !l.Equals(el) {
 					t.Errorf("Legs slices differ. Want \n%v, \ngot \n%v", want.Legs, have.Legs)
 				}
 			}

@@ -10,8 +10,15 @@ type Trip struct {
 	Legs  []*Leg
 }
 
+func newTrip(fares []*Fare, legs []*Leg) *Trip {
+	return &Trip{
+		Fares: fares,
+		Legs:  legs,
+	}
+}
+
 func (t *Trip) String() string {
-	return fmt.Sprintf("Trip{Price:%f, Legs:%v}", t.Fares, t.Legs)
+	return fmt.Sprintf("Trip{Price:%v, Legs:%v}", t.Fares, t.Legs)
 }
 
 type Leg struct {
@@ -22,7 +29,7 @@ type Leg struct {
 }
 
 func (l *Leg) Equals(l2 *Leg) bool {
-	return l.Dep == l2.Dep && l.Arr == l2.Arr && l.DepTime == l2.DepTime && l.ArrTime == l2.ArrTime && l.Id == l2.Id
+	return l.Dep == l2.Dep && l.Arr == l2.Arr && l.DepTime.Equal(l2.DepTime) && l.ArrTime.Equal(l2.ArrTime) && l.Id == l2.Id
 }
 
 func (l *Leg) String() string {
@@ -52,5 +59,5 @@ func newFare(t string, p float64) *Fare {
 }
 
 func (f *Fare) String() string {
-	return fmt.Sprintf("%s: %d", f.Type, f.Price)
+	return fmt.Sprintf("%s: %f", f.Type, f.Price)
 }
