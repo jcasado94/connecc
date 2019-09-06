@@ -2,6 +2,7 @@ package scraping
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 )
@@ -9,7 +10,7 @@ import (
 func TestGetTripsMegabus(t *testing.T) {
 	sc := newMegabusScraper()
 	sc.client.Transport = newMultipleMockRoundTripper(urlToFilePath(), urlToContentType())
-	expectedTrips := []*Trip{
+	expectedTrips := tripSlice{
 		&Trip{
 			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
 			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 2, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 7, 30, 0, 0, time.UTC)},
@@ -54,8 +55,11 @@ func TestGetTripsMegabus(t *testing.T) {
 	if len(expectedTrips) != len(trips) {
 		t.Errorf("Trip slices lengths differ. Want \n%v, \ngot %v", expectedTrips, trips)
 	}
+	tripsSlice := newTripSlice(trips)
+	sort.Sort(tripsSlice)
+	sort.Sort(expectedTrips)
 	for i, want := range expectedTrips {
-		have := trips[i]
+		have := tripsSlice[i]
 		t.Run(fmt.Sprintf("Trip %d", i), func(t *testing.T) {
 			if len(want.Legs) != len(have.Legs) {
 				t.Errorf("Legs slices differ. Want \n%v, \ngot \n%v", want.Legs, have.Legs)
@@ -69,16 +73,42 @@ func TestGetTripsMegabus(t *testing.T) {
 				l := have.Legs[j]
 				if !l.Equals(el) {
 					t.Errorf("Legs slices differ. Want \n%v, \ngot \n%v", want.Legs, have.Legs)
+					break
 				}
 			}
 			for j, ef := range want.Fares {
 				f := have.Fares[j]
 				if *f != *ef {
 					t.Errorf("Fares slices differ. Want \n%v, \ngot \n%v", want.Fares, have.Fares)
+					break
 				}
 			}
 		})
 	}
+}
+
+type tripSlice []*Trip
+
+func newTripSlice(trips []*Trip) tripSlice {
+	var slice tripSlice
+	for _, t := range trips {
+		slice = append(slice, t)
+	}
+	return slice
+}
+
+func (t tripSlice) Len() int {
+	return len(t)
+}
+
+func (t tripSlice) Less(i, j int) bool {
+	return t[j].Legs[0].DepTime.After(t[i].Legs[0].DepTime)
+}
+
+func (t tripSlice) Swap(i, j int) {
+	iOld := t[i]
+	t[i] = t[j]
+	t[j] = iOld
 }
 
 func urlToFilePath() map[string]string {
