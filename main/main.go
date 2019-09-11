@@ -3,23 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/jcasado94/connecc/graph"
-	"github.com/jcasado94/kstar"
+	"github.com/jcasado94/connecc/scraping"
 )
 
 func main() {
-	g, err := graph.NewGenGraph(3, 0, "bolt://localhost:7687", "neo4j", "prod")
-	if err != nil {
-		panic(err)
+	scraper := scraping.NewSpiritScraper()
+	trips, _ := scraper.GetTrips("BOS", "DEN", 2, 9, 2019, 1, 0, 0)
+	for _, trip := range trips {
+		fmt.Println(trip)
 	}
-	paths := kstar.Run(g, 1)
-	pathsObjects := make([][]kstar.Edge, 0)
-	for _, p := range paths {
-		path := make([]kstar.Edge, 0)
-		for _, e := range p {
-			path = append(path, *e)
-		}
-		pathsObjects = append(pathsObjects, path)
-	}
-	fmt.Println(pathsObjects)
+	// scraper.GetTrips("BOS", "DEN", 25, 9, 2019, 1, 0, 0)
 }
