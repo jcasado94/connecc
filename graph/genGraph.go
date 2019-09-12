@@ -11,11 +11,10 @@ import (
 var invalidateAgeGenRel = time.Hour * 24
 
 type genGraph struct {
-	mDriver          drivers.MongoDriver
-	dbDriver         drivers.DbDriver
-	connectionsCache genConnectionCache
-	nodesCache       map[int]node
-	s, t             int
+	mDriver  drivers.MongoDriver
+	dbDriver drivers.DbDriver
+	cache    genGeaphCache
+	s, t     int
 }
 
 func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*genGraph, error) {
@@ -30,17 +29,11 @@ func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*genGraph, erro
 	g := genGraph{
 		mDriver:  mDriver,
 		dbDriver: driver,
-		connectionsCache: genConnectionCache{
-			cache:     newIntCMap(),
-			infoCache: newIntCMap(),
-			timeStamp: newIntCMap(),
-		},
-		nodesCache: make(map[int]node),
-		s:          s,
-		t:          t,
+		s:        s,
+		t:        t,
 	}
 
-	g.connectionsCache = newGenConnectionCache(&g)
+	g.cache = newGenGraphCache(&g)
 
 	err = g.cacheNodeInfo(s)
 	if err != nil {
@@ -60,14 +53,14 @@ func (g *genGraph) cacheNodeInfo(id int) error {
 		label := rec.GetByIndex(0).(string)
 		params := rec.GetByIndex(1).(map[string]interface{})
 		node := newNode(label, id, params)
-		g.nodesCache[id] = node
+		g.cache.setNode(id, &node)
 	}
 	return result.Err()
 }
 
 func (g *genGraph) Connections(n int) map[int][]float64 {
 
-	connections, err := g.connectionsCache.getOrInvalidate(n)
+	connections, err := g.cache.getOrInvalidate(n)
 	if err != nil {
 		panic(err)
 	}
@@ -88,10 +81,8 @@ func (g *genGraph) retrieveGenConnections(n int) error {
 	}
 	for _, gcon := range gn {
 		id := gcon.n.Id()
-		if _, exists := g.nodesCache[id]; !exists {
-			g.nodesCache[id] = gcon.n
-		}
-		g.connectionsCache.setGeneralRelationship(n, id, gcon.Provider, gcon.Price)
+		g.cache.setNode(id, &gcon.n)
+		g.cache.setGeneralRelationship(n, id, gcon.Provider, gcon.Price)
 	}
 
 	return nil
@@ -118,10 +109,8 @@ func (g *genGraph) retrieveBelongsToConnections(n int) error {
 	}
 	for _, btcon := range btn {
 		id := btcon.n.Id()
-		if _, exists := g.nodesCache[id]; !exists {
-			g.nodesCache[id] = btcon.n
-		}
-		g.connectionsCache.setBelongsToRelationship(n, id, btcon.Cost)
+		g.cache.setNode(id, &btcon.n)
+		g.cache.setBelongsToRelationship(n, id, btcon.Cost)
 	}
 
 	return nil
@@ -143,19 +132,21 @@ func (g *genGraph) FValue(n int) float64 {
 	return avgPrice
 }
 
-type genConnectionCache struct {
-	infoCache intCMap // map[int]map[int][]genConnectionInfo
-	cache     intCMap // map[int]map[int][]float64
-	timeStamp intCMap // map[int]time.Time
-	g         *genGraph
+type genGeaphCache struct {
+	infoCache            intCMap // map[int]map[int][]genConnectionInfo
+	cache                intCMap // map[int]map[int][]float64
+	connectionsTimeStamp intCMap // map[int]time.Time
+	nodesCache           intCMap // map[int]node
+	g                    *genGraph
 }
 
-func newGenConnectionCache(g *genGraph) genConnectionCache {
-	return genConnectionCache{
-		infoCache: newIntCMap(),
-		cache:     newIntCMap(),
-		timeStamp: newIntCMap(),
-		g:         g,
+func newGenGraphCache(g *genGraph) genGeaphCache {
+	return genGeaphCache{
+		infoCache:            newIntCMap(),
+		cache:                newIntCMap(),
+		connectionsTimeStamp: newIntCMap(),
+		nodesCache:           newIntCMap(),
+		g:                    g,
 	}
 }
 
@@ -186,9 +177,15 @@ func (m *intCMap) set(key int, val interface{}) {
 	m.cm.Set(strconv.Itoa(key), val)
 }
 
-func (c *genConnectionCache) getOrInvalidate(n int) (map[int][]float64, error) {
+func (m *intCMap) checkSet(key int, val interface{}) {
+	if _, ok := m.checkGet(key); !ok {
+		m.set(key, val)
+	}
+}
+
+func (c *genGeaphCache) getOrInvalidate(n int) (map[int][]float64, error) {
 	var err error
-	tInt, ok := c.timeStamp.checkGet(n)
+	tInt, ok := c.connectionsTimeStamp.checkGet(n)
 	if !ok {
 		err = c.initializeCache(n)
 	} else if time.Now().Sub(tInt.(time.Time)) > invalidateAgeGenRel {
@@ -197,8 +194,8 @@ func (c *genConnectionCache) getOrInvalidate(n int) (map[int][]float64, error) {
 	return c.cache.get(n).(map[int][]float64), err
 }
 
-func (c *genConnectionCache) initializeCache(n int) error {
-	c.timeStamp.set(n, time.Now())
+func (c *genGeaphCache) initializeCache(n int) error {
+	c.connectionsTimeStamp.set(n, time.Now())
 	c.cache.set(n, make(map[int][]float64))
 	c.infoCache.set(n, make(map[int][]genConnectionInfo))
 	err := c.g.retrieveGenConnections(n)
@@ -212,8 +209,8 @@ func (c *genConnectionCache) initializeCache(n int) error {
 	return nil
 }
 
-func (c *genConnectionCache) invalidateCache(n int) error {
-	c.timeStamp.set(n, time.Now())
+func (c *genGeaphCache) invalidateCache(n int) error {
+	c.connectionsTimeStamp.set(n, time.Now())
 	err := c.g.retrieveGenConnections(n)
 	if err != nil {
 		return err
@@ -221,7 +218,7 @@ func (c *genConnectionCache) invalidateCache(n int) error {
 	return nil
 }
 
-func (c *genConnectionCache) setGeneralRelationship(n, id, provider int, price float64) {
+func (c *genGeaphCache) setGeneralRelationship(n, id, provider int, price float64) {
 	mCon := c.cache.get(n).(map[int][]float64)
 	mConInfo := c.infoCache.get(n).(map[int][]genConnectionInfo)
 	if _, exists := mCon[id]; !exists {
@@ -232,9 +229,13 @@ func (c *genConnectionCache) setGeneralRelationship(n, id, provider int, price f
 	mConInfo[id] = append(mConInfo[id], genConnectionInfo{provider: provider})
 }
 
-func (c *genConnectionCache) setBelongsToRelationship(n, id int, cost float64) {
+func (c *genGeaphCache) setBelongsToRelationship(n, id int, cost float64) {
 	mCon := c.cache.get(n).(map[int][]float64)
 	if _, exists := mCon[id]; !exists {
 		mCon[id] = []float64{cost}
 	}
+}
+
+func (c *genGeaphCache) setNode(id int, n *node) {
+	c.nodesCache.checkSet(id, *n)
 }

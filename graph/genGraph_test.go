@@ -3,6 +3,7 @@ package graph
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -132,26 +133,10 @@ func TestConnections(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(fmt.Sprintf("Connections for %d", tc.id), func(t *testing.T) {
 				connections := g.Connections(tc.id)
-				if len(tc.expectedConnections) != len(connections) {
-					t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
+				if !reflect.DeepEqual(tc.expectedConnections, connections) {
+					t.Errorf("Expected %v\ngot\n%v", tc.expectedConnections, connections)
+					cleanDb(session)
 					return
-				}
-				for key, expectedSlice := range tc.expectedConnections {
-					if _, exists := connections[key]; !exists {
-						t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
-						continue
-					}
-					slice := connections[key]
-					if len(expectedSlice) != len(slice) {
-						t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
-						continue
-					}
-					for i, expectedValue := range expectedSlice {
-						if expectedValue != slice[i] {
-							t.Errorf("connection maps differ. Want %v, got %v", tc.expectedConnections, connections)
-							break
-						}
-					}
 				}
 			})
 		}
@@ -164,15 +149,13 @@ func TestConnections(t *testing.T) {
 			idToronto: newCity(idToronto, "Toronto"),
 			idNewYork: newCity(idNewYork, "New York"),
 		}
-		if len(expectedNodesCache) != len(g.nodesCache) {
-			cleanDb(session)
-			t.Errorf("nodesCache not properly stored. Want %v, got %v", expectedNodesCache, g.nodesCache)
+		nodesCache := make(map[int]node)
+		for t := range g.cache.nodesCache.cm.Iter() {
+			k, _ := strconv.Atoi(t.Key)
+			nodesCache[k] = t.Val.(node)
 		}
-		for id, expectedNode := range expectedNodesCache {
-			if n, exists := g.nodesCache[id]; !exists || !expectedNode.Equals(n) {
-				cleanDb(session)
-				t.Errorf("nodesCache not properly stored. Want %v, got %v", expectedNodesCache, g.nodesCache)
-			}
+		if !reflect.DeepEqual(expectedNodesCache, nodesCache) {
+			t.Errorf("Expected %v\ngot\n%v", expectedNodesCache, nodesCache)
 		}
 	})
 
@@ -186,141 +169,166 @@ func TestNewGenGraph(t *testing.T) {
 	defer session.Close()
 
 	g, ids := newMockGenGraph(session, t)
-	idNewYork := ids[0]
+	idNewYork := ids[4]
 
-	if _, exists := g.nodesCache[idNewYork]; !exists {
+	if _, exists := g.cache.nodesCache.checkGet(idNewYork); !exists {
 		t.Errorf("No cached node for node s: %d", idNewYork)
 	}
 	expectedNode := newCity(idNewYork, "New York")
-	if !expectedNode.Equals(g.nodesCache[idNewYork]) {
-		t.Errorf("Cached s node differs. Expected %v, got %v.", expectedNode, g.nodesCache[idNewYork])
+	n := g.cache.nodesCache.get(idNewYork).(node)
+	if !expectedNode.Equals(n) {
+		t.Errorf("Cached s node differs. Expected %v, got %v.", expectedNode, n)
 	}
 
 	cleanDb(session)
 }
 
-func TestGenConnectionCache(t *testing.T) {
+func TestSetBelongsToRelationship(t *testing.T) {
 	driver, session := newSessionTestGraph()
 	defer driver.Close()
 	defer session.Close()
 	g, ids := newMockGenGraph(session, t)
-	c := &g.connectionsCache
-	idYYZ, idJFK, _, idToronto, idNewYork := ids[0], ids[1], ids[2], ids[3], ids[4]
-	t.Run("SetBelongsToRelationship", func(t *testing.T) {
-		expectedMap := map[int][]float64{
-			1: []float64{0.0},
-		}
-		c.cache.set(idNewYork, make(map[int][]float64))
-		c.setBelongsToRelationship(idNewYork, 1, 0.0)
-		cons := c.cache.get(idNewYork).(map[int][]float64)
-		if !reflect.DeepEqual(expectedMap, cons) {
-			t.Errorf("Expected %v,\ngot %v", expectedMap, cons)
-		}
-		c.cache = newIntCMap()
-	})
-
-	t.Run("SetGeneralRelationship", func(t *testing.T) {
-		c.cache.set(idNewYork, make(map[int][]float64))
-		c.infoCache.set(idNewYork, make(map[int][]genConnectionInfo))
-		expectedCacheMap := map[int][]float64{
-			1: []float64{1.0},
-		}
-		expectedInfoCacheMap := map[int][]genConnectionInfo{
-			1: []genConnectionInfo{genConnectionInfo{provider: 0}},
-		}
-		c.setGeneralRelationship(idNewYork, 1, 0, 1.0)
-		consCache := c.cache.get(idNewYork).(map[int][]float64)
-		consInfoCache := c.infoCache.get(idNewYork).(map[int][]genConnectionInfo)
-		if !reflect.DeepEqual(expectedCacheMap, consCache) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, consCache)
-		}
-		if !reflect.DeepEqual(expectedInfoCacheMap, consInfoCache) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, consInfoCache)
-		}
-		c.cache = newIntCMap()
-		c.infoCache = newIntCMap()
-	})
-
-	t.Run("InvalidateCache", func(t *testing.T) {
-		c.cache.set(idYYZ, make(map[int][]float64))
-		c.infoCache.set(idYYZ, make(map[int][]genConnectionInfo))
-		now := time.Now()
-		c.timeStamp.set(idYYZ, now)
-		c.invalidateCache(idYYZ)
-		expectedCacheMap := map[int][]float64{idJFK: []float64{200.0}}
-		expectedInfoCacheMap := map[int][]genConnectionInfo{idJFK: []genConnectionInfo{genConnectionInfo{provider: 0}}}
-		if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
-		}
-		if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
-		}
-		if c.timeStamp.get(idYYZ).(time.Time).Equal(now) {
-			t.Error("Timestamp hasn't changed.")
-		}
-		c.cache = newIntCMap()
-		c.infoCache = newIntCMap()
-		c.timeStamp = newIntCMap()
-	})
-
-	t.Run("InitializeCache", func(t *testing.T) {
-		now := time.Now()
-		expectedCacheMap := map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}
-		expectedInfoCacheMap := map[int][]genConnectionInfo{idJFK: []genConnectionInfo{genConnectionInfo{provider: 0}}}
-		c.initializeCache(idYYZ)
-		if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
-		}
-		if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
-		}
-		if c.timeStamp.get(idYYZ).(time.Time).Sub(now) <= 0 {
-			t.Error("Timestamp was not set")
-		}
-		c.cache = newIntCMap()
-		c.infoCache = newIntCMap()
-		c.timeStamp = newIntCMap()
-	})
-
-	t.Run("GetOrInvalidate", func(t *testing.T) {
-		expectedInfoCacheMap := map[int][]genConnectionInfo{idJFK: []genConnectionInfo{genConnectionInfo{provider: 0}}}
-
-		// No timestamp
-		expectedCacheMap := map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}
-		c.getOrInvalidate(idYYZ)
-		if _, ok := c.timeStamp.checkGet(idYYZ); !ok {
-			t.Error("Timestamp was not set")
-		}
-		if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
-		}
-		if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
-		}
-		c.cache = newIntCMap()
-		c.infoCache = newIntCMap()
-		c.timeStamp = newIntCMap()
-
-		// Old timestamp
-		expectedCacheMap = map[int][]float64{idJFK: []float64{200.0}}
-		ts, _ := time.Parse(time.RFC822, time.RFC822)
-		c.timeStamp.set(idYYZ, ts)
-		c.cache.set(idYYZ, make(map[int][]float64))
-		c.infoCache.set(idYYZ, make(map[int][]genConnectionInfo))
-		c.getOrInvalidate(idYYZ)
-		if c.timeStamp.get(idYYZ).(time.Time).Equal(ts) {
-			t.Error("Timestamp did not change")
-		}
-		if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
-		}
-		if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
-			t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
-		}
-		c.cache = newIntCMap()
-		c.infoCache = newIntCMap()
-		c.timeStamp = newIntCMap()
-	})
-
+	c := &g.cache
+	idNewYork := ids[4]
+	expectedMap := map[int][]float64{
+		1: []float64{0.0},
+	}
+	c.cache.set(idNewYork, make(map[int][]float64))
+	c.setBelongsToRelationship(idNewYork, 1, 0.0)
+	cons := c.cache.get(idNewYork).(map[int][]float64)
+	if !reflect.DeepEqual(expectedMap, cons) {
+		t.Errorf("Expected %v,\ngot %v", expectedMap, cons)
+	}
 	cleanDb(session)
 }
+
+func TestSetGeneralRelationship(t *testing.T) {
+	driver, session := newSessionTestGraph()
+	defer driver.Close()
+	defer session.Close()
+	g, ids := newMockGenGraph(session, t)
+	c := &g.cache
+	idNewYork := ids[4]
+	c.cache.set(idNewYork, make(map[int][]float64))
+	c.infoCache.set(idNewYork, make(map[int][]genConnectionInfo))
+	expectedCacheMap := map[int][]float64{
+		1: []float64{1.0},
+	}
+	expectedInfoCacheMap := map[int][]genConnectionInfo{
+		1: []genConnectionInfo{genConnectionInfo{provider: 0}},
+	}
+	c.setGeneralRelationship(idNewYork, 1, 0, 1.0)
+	consCache := c.cache.get(idNewYork).(map[int][]float64)
+	consInfoCache := c.infoCache.get(idNewYork).(map[int][]genConnectionInfo)
+	if !reflect.DeepEqual(expectedCacheMap, consCache) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, consCache)
+	}
+	if !reflect.DeepEqual(expectedInfoCacheMap, consInfoCache) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, consInfoCache)
+	}
+	cleanDb(session)
+}
+
+func TestInvlaidateCache(t *testing.T) {
+	driver, session := newSessionTestGraph()
+	defer driver.Close()
+	defer session.Close()
+	g, ids := newMockGenGraph(session, t)
+	c := &g.cache
+	idYYZ, idJFK := ids[0], ids[1]
+	c.cache.set(idYYZ, make(map[int][]float64))
+	c.infoCache.set(idYYZ, make(map[int][]genConnectionInfo))
+	now := time.Now()
+	c.connectionsTimeStamp.set(idYYZ, now)
+	c.invalidateCache(idYYZ)
+	expectedCacheMap := map[int][]float64{idJFK: []float64{200.0}}
+	expectedInfoCacheMap := map[int][]genConnectionInfo{idJFK: []genConnectionInfo{genConnectionInfo{provider: 0}}}
+	if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
+	}
+	if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
+	}
+	if c.connectionsTimeStamp.get(idYYZ).(time.Time).Equal(now) {
+		t.Error("Timestamp hasn't changed.")
+	}
+	cleanDb(session)
+}
+
+func TestInitializeCache(t *testing.T) {
+	driver, session := newSessionTestGraph()
+	defer driver.Close()
+	defer session.Close()
+	g, ids := newMockGenGraph(session, t)
+	c := &g.cache
+	idYYZ, idJFK, idToronto := ids[0], ids[1], ids[3]
+	now := time.Now()
+	expectedCacheMap := map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}
+	expectedInfoCacheMap := map[int][]genConnectionInfo{idJFK: []genConnectionInfo{genConnectionInfo{provider: 0}}}
+	c.initializeCache(idYYZ)
+	if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
+	}
+	if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
+	}
+	if c.connectionsTimeStamp.get(idYYZ).(time.Time).Sub(now) <= 0 {
+		t.Error("Timestamp was not set")
+	}
+	cleanDb(session)
+}
+
+func TestGetOrInvalidate(t *testing.T) {
+	driver, session := newSessionTestGraph()
+	defer driver.Close()
+	defer session.Close()
+	g, ids := newMockGenGraph(session, t)
+	c := &g.cache
+	idYYZ, idJFK, idToronto := ids[0], ids[1], ids[3]
+	expectedInfoCacheMap := map[int][]genConnectionInfo{idJFK: []genConnectionInfo{genConnectionInfo{provider: 0}}}
+
+	// No timestamp
+	expectedCacheMap := map[int][]float64{idJFK: []float64{200.0}, idToronto: []float64{defaultCostBelongsToCity}}
+	c.getOrInvalidate(idYYZ)
+	if _, ok := c.connectionsTimeStamp.checkGet(idYYZ); !ok {
+		t.Error("Timestamp was not set")
+	}
+	if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
+	}
+	if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
+	}
+	c.cache = newIntCMap()
+	c.infoCache = newIntCMap()
+	c.connectionsTimeStamp = newIntCMap()
+
+	// Old timestamp
+	expectedCacheMap = map[int][]float64{idJFK: []float64{200.0}}
+	ts, _ := time.Parse(time.RFC822, time.RFC822)
+	c.connectionsTimeStamp.set(idYYZ, ts)
+	c.cache.set(idYYZ, make(map[int][]float64))
+	c.infoCache.set(idYYZ, make(map[int][]genConnectionInfo))
+	c.getOrInvalidate(idYYZ)
+	if c.connectionsTimeStamp.get(idYYZ).(time.Time).Equal(ts) {
+		t.Error("Timestamp did not change")
+	}
+	if !reflect.DeepEqual(c.cache.get(idYYZ), expectedCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedCacheMap, c.cache.get(idYYZ))
+	}
+	if !reflect.DeepEqual(c.infoCache.get(idYYZ), expectedInfoCacheMap) {
+		t.Errorf("Expected %v,\ngot\n %v", expectedInfoCacheMap, c.infoCache.get(idYYZ))
+	}
+	cleanDb(session)
+}
+
+func TestSetNode(t *testing.T) {
+	c := newGenGraphCache(nil)
+	c.nodesCache = newIntCMap()
+	n := newNode("Airport", 0, map[string]interface{}{"code": "NYZ"})
+	c.setNode(0, &n)
+	if _, ok := c.nodesCache.checkGet(0); !ok {
+		t.Error("Didn't store node correctly")
+	}
+}
+
