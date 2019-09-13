@@ -6,12 +6,12 @@ import (
 )
 
 type Trip struct {
-	Fares []*Fare
-	Legs  []*Leg
+	Fares []Fare
+	Legs  []Leg
 }
 
-func newTrip(fares []*Fare, legs []*Leg) *Trip {
-	return &Trip{
+func newTrip(fares []Fare, legs []Leg) Trip {
+	return Trip{
 		Fares: fares,
 		Legs:  legs,
 	}
@@ -36,8 +36,8 @@ func (l *Leg) String() string {
 	return fmt.Sprintf("Leg{Dep:%s, Arr: %s, DepTime:%v, ArrTime:%v, Id:%s}", l.Dep, l.Arr, l.DepTime, l.ArrTime, l.Id)
 }
 
-func newLeg(dep, arr, id string, depTime, arrTime time.Time) *Leg {
-	return &Leg{
+func newLeg(dep, arr, id string, depTime, arrTime time.Time) Leg {
+	return Leg{
 		Dep:     dep,
 		Arr:     arr,
 		DepTime: depTime,
@@ -51,8 +51,8 @@ type Fare struct {
 	Price float64
 }
 
-func newFare(t string, p float64) *Fare {
-	return &Fare{
+func newFare(t string, p float64) Fare {
+	return Fare{
 		Type:  t,
 		Price: p,
 	}

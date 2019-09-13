@@ -10,23 +10,23 @@ import (
 
 var invalidateAgeGenRel = time.Hour * 24
 
-type genGraph struct {
+type GenGraph struct {
 	mDriver  drivers.MongoDriver
 	dbDriver drivers.DbDriver
 	cache    genGeaphCache
 	s, t     int
 }
 
-func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*genGraph, error) {
+func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*GenGraph, error) {
 	driver, err := drivers.NewDbDriver(dbEndpoint, dbUsername, dbPw, false)
 	if err != nil {
-		return &genGraph{}, err
+		return &GenGraph{}, err
 	}
 	mDriver, err := drivers.NewMongoDriver()
 	if err != nil {
-		return &genGraph{}, err
+		return &GenGraph{}, err
 	}
-	g := genGraph{
+	g := GenGraph{
 		mDriver:  mDriver,
 		dbDriver: driver,
 		s:        s,
@@ -43,7 +43,7 @@ func NewGenGraph(s, t int, dbEndpoint, dbUsername, dbPw string) (*genGraph, erro
 	return &g, nil
 }
 
-func (g *genGraph) cacheNodeInfo(id int) error {
+func (g *GenGraph) cacheNodeInfo(id int) error {
 	result, err := g.dbDriver.NodeInfo(id)
 	if err != nil {
 		return err
@@ -58,17 +58,15 @@ func (g *genGraph) cacheNodeInfo(id int) error {
 	return result.Err()
 }
 
-func (g *genGraph) Connections(n int) map[int][]float64 {
-
+func (g *GenGraph) Connections(n int) map[int][]float64 {
 	connections, err := g.cache.getOrInvalidate(n)
 	if err != nil {
 		panic(err)
 	}
 	return connections
-
 }
 
-func (g *genGraph) retrieveGenConnections(n int) error {
+func (g *GenGraph) retrieveGenConnections(n int) error {
 
 	neighboursGenResult, err := g.dbDriver.NeighboursGen(n)
 	if err != nil {
@@ -90,7 +88,7 @@ func (g *genGraph) retrieveGenConnections(n int) error {
 }
 
 // Get the neighbours through the BelongsTo City node, plus the City node itself, excluding S. City nodes shall return no neighbours, except for S.
-func (g *genGraph) retrieveBelongsToConnections(n int) error {
+func (g *GenGraph) retrieveBelongsToConnections(n int) error {
 
 	//concurrent?
 	neighboursBelongsToCityResult, err := g.dbDriver.NeighboursBelongsToCity(n, g.S())
@@ -116,15 +114,15 @@ func (g *genGraph) retrieveBelongsToConnections(n int) error {
 	return nil
 }
 
-func (g *genGraph) S() int {
+func (g *GenGraph) S() int {
 	return g.s
 }
 
-func (g *genGraph) T() int {
+func (g *GenGraph) T() int {
 	return g.t
 }
 
-func (g *genGraph) FValue(n int) float64 {
+func (g *GenGraph) FValue(n int) float64 {
 	avgPrice, err := g.mDriver.GetAvgPrice(n, g.T())
 	if err != nil {
 		panic(err)
@@ -137,10 +135,10 @@ type genGeaphCache struct {
 	cache                intCMap // map[int]map[int][]float64
 	connectionsTimeStamp intCMap // map[int]time.Time
 	nodesCache           intCMap // map[int]node
-	g                    *genGraph
+	g                    *GenGraph
 }
 
-func newGenGraphCache(g *genGraph) genGeaphCache {
+func newGenGraphCache(g *GenGraph) genGeaphCache {
 	return genGeaphCache{
 		infoCache:            newIntCMap(),
 		cache:                newIntCMap(),

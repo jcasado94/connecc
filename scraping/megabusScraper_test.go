@@ -9,41 +9,41 @@ import (
 func TestGetTripsMegabus(t *testing.T) {
 	sc := newMegabusScraper()
 	sc.client.Transport = newMultipleMockRoundTripper(urlToFilePath(), urlToContentType())
-	expectedTrips := []*Trip{
-		&Trip{
-			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
-			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 2, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 7, 30, 0, 0, time.UTC)},
-				&Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 10, 5, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 00, 25, 0, 0, time.UTC)},
+	expectedTrips := []Trip{
+		Trip{
+			Fares: []Fare{Fare{Price: 99.0, Type: "standard"}},
+			Legs: []Leg{Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 2, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 7, 30, 0, 0, time.UTC)},
+				Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 10, 5, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 00, 25, 0, 0, time.UTC)},
 			},
 		},
-		&Trip{
-			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
-			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 8, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 12, 15, 0, 0, time.UTC)},
-				&Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 15, 30, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 7, 25, 0, 0, time.UTC)},
+		Trip{
+			Fares: []Fare{Fare{Price: 99.0, Type: "standard"}},
+			Legs: []Leg{Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 8, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 12, 15, 0, 0, time.UTC)},
+				Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 15, 30, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 7, 25, 0, 0, time.UTC)},
 			},
 		},
-		&Trip{
-			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
-			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 9, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 13, 40, 0, 0, time.UTC)},
-				&Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 15, 30, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 7, 25, 0, 0, time.UTC)},
+		Trip{
+			Fares: []Fare{Fare{Price: 99.0, Type: "standard"}},
+			Legs: []Leg{Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 9, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 13, 40, 0, 0, time.UTC)},
+				Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 15, 30, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 7, 25, 0, 0, time.UTC)},
 			},
 		},
-		&Trip{
-			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
-			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 16, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 20, 15, 0, 0, time.UTC)},
-				&Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 23, 20, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 13, 45, 0, 0, time.UTC)},
+		Trip{
+			Fares: []Fare{Fare{Price: 99.0, Type: "standard"}},
+			Legs: []Leg{Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 16, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 20, 15, 0, 0, time.UTC)},
+				Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 23, 20, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 13, 45, 0, 0, time.UTC)},
 			},
 		},
-		&Trip{
-			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
-			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 17, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 21, 15, 0, 0, time.UTC)},
-				&Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 23, 20, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 13, 45, 0, 0, time.UTC)},
+		Trip{
+			Fares: []Fare{Fare{Price: 99.0, Type: "standard"}},
+			Legs: []Leg{Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 17, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 8, 21, 15, 0, 0, time.UTC)},
+				Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 8, 23, 20, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 13, 45, 0, 0, time.UTC)},
 			},
 		},
-		&Trip{
-			Fares: []*Fare{&Fare{Price: 99.0, Type: "standard"}},
-			Legs: []*Leg{&Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 23, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 4, 0, 0, 0, time.UTC)},
-				&Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 9, 6, 5, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 21, 35, 0, 0, time.UTC)},
+		Trip{
+			Fares: []Fare{Fare{Price: 99.0, Type: "standard"}},
+			Legs: []Leg{Leg{Dep: "123", Arr: "142", DepTime: time.Date(2019, time.Month(9), 8, 23, 0, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 4, 0, 0, 0, time.UTC)},
+				Leg{Dep: "142", Arr: "289", DepTime: time.Date(2019, time.Month(9), 9, 6, 5, 0, 0, time.UTC), ArrTime: time.Date(2019, time.Month(9), 9, 21, 35, 0, 0, time.UTC)},
 			},
 		},
 	}
@@ -67,13 +67,13 @@ func TestGetTripsMegabus(t *testing.T) {
 			}
 			for j, el := range want.Legs {
 				l := have.Legs[j]
-				if !l.Equals(el) {
+				if !l.Equals(&el) {
 					t.Errorf("Legs slices differ. Want \n%v, \ngot \n%v", want.Legs, have.Legs)
 				}
 			}
 			for j, ef := range want.Fares {
 				f := have.Fares[j]
-				if *f != *ef {
+				if f != ef {
 					t.Errorf("Fares slices differ. Want \n%v, \ngot \n%v", want.Fares, have.Fares)
 				}
 			}

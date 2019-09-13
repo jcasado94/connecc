@@ -96,7 +96,7 @@ func graphMock(session neo4j.Session) (result []int, err error) {
 	return response.([]int), err
 }
 
-func newMockGenGraph(session neo4j.Session, t *testing.T) (g *genGraph, ids []int) {
+func newMockGenGraph(session neo4j.Session, t *testing.T) (g *GenGraph, ids []int) {
 	ids, err := graphMock(session)
 	if err != nil {
 		t.Fail()
@@ -331,4 +331,3 @@ func TestSetNode(t *testing.T) {
 		t.Error("Didn't store node correctly")
 	}
 }
-

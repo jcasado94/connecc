@@ -22,8 +22,8 @@ func newMegabusScraper() *MegabusScraper {
 	}
 }
 
-func (sc *MegabusScraper) GetTrips(departure, arrival string, day, month, year, adults, children, infants int) ([]*Trip, error) {
-	trips := make([]*Trip, 0)
+func (sc *MegabusScraper) GetTrips(departure, arrival string, day, month, year, adults, children, infants int) ([]Trip, error) {
+	trips := make([]Trip, 0)
 	var err error
 
 	url := fmt.Sprintf("https://us.megabus.com/journey-planner/journeys?days=1&concessionCount=0&departureDate=%d-%d-%d&destinationId=%s&inboundOtherDisabilityCount=0&inboundPcaCount=0&inboundWheelchairSeated=0&nusCount=0&originId=%s&otherDisabilityCount=0&pcaCount=0&totalPassengers=%d&wheelchairSeated=0",
@@ -31,39 +31,37 @@ func (sc *MegabusScraper) GetTrips(departure, arrival string, day, month, year, 
 
 	resp, err := sc.client.Get(url)
 	if err != nil {
-		return []*Trip{}, err
+		return []Trip{}, err
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []*Trip{}, err
+		return []Trip{}, err
 	}
 	document := string(body)
 	js, err := getJourniesJson(document)
 	if err != nil {
-		return []*Trip{}, err
+		return []Trip{}, err
 	}
 
 	for _, j := range js.Journeys {
 		if len(j.Legs) == 1 {
-			err = sc.getOneLegTrip(&j, trips)
+			err = sc.getOneLegTrip(&j, &trips)
 			if err != nil {
-				return []*Trip{}, err
+				return []Trip{}, err
 			}
 		} else {
 			err = sc.getSeveralLegsTrip(&j, &trips, year, month, day, departure, arrival)
 			if err != nil {
-				return []*Trip{}, err
+				return []Trip{}, err
 			}
 		}
 	}
-
 	return trips, nil
-
 }
 
-func (sc *MegabusScraper) getOneLegTrip(j *JsonMbJourney, trips []*Trip) error {
+func (sc *MegabusScraper) getOneLegTrip(j *JsonMbJourney, trips *[]Trip) error {
 	depTime, err := time.Parse(time.RFC3339, j.Legs[0].DepartureDateTime)
 	if err != nil {
 		return err
@@ -72,14 +70,14 @@ func (sc *MegabusScraper) getOneLegTrip(j *JsonMbJourney, trips []*Trip) error {
 	if err != nil {
 		return err
 	}
-	trips = append(trips, newTrip(
-		[]*Fare{newFare("standard", j.Price)},
-		[]*Leg{newLeg(j.Legs[0].Origin.CityId, j.Legs[0].Destination.CityId, "", depTime, arrTime)}))
+	*trips = append(*trips, newTrip(
+		[]Fare{newFare("standard", j.Price)},
+		[]Leg{newLeg(j.Legs[0].Origin.CityId, j.Legs[0].Destination.CityId, "", depTime, arrTime)}))
 
 	return nil
 }
 
-func (sc *MegabusScraper) getSeveralLegsTrip(j *JsonMbJourney, trips *[]*Trip, year, month, day int, departure, arrival string) error {
+func (sc *MegabusScraper) getSeveralLegsTrip(j *JsonMbJourney, trips *[]Trip, year, month, day int, departure, arrival string) error {
 	url := fmt.Sprintf("https://us.megabus.com/journey-planner/api/itinerary?journeyId=%s", j.JourneyId)
 	resp, err := sc.client.Get(url)
 	if err != nil {
@@ -96,7 +94,7 @@ func (sc *MegabusScraper) getSeveralLegsTrip(j *JsonMbJourney, trips *[]*Trip, y
 	}
 	var dep, arr string
 	var depTime, arrTime time.Time
-	var legs []*Leg
+	var legs []Leg
 	for i, it := range its.ScheduledStops {
 		if it.Ordinal == 0 {
 			depHour, depMin, err := getHourMinFromTimeString(it.DepartureTime)
@@ -131,7 +129,7 @@ func (sc *MegabusScraper) getSeveralLegsTrip(j *JsonMbJourney, trips *[]*Trip, y
 		}
 	}
 	*trips = append(*trips, newTrip(
-		[]*Fare{newFare("standard", j.Price)},
+		[]Fare{newFare("standard", j.Price)},
 		legs,
 	))
 

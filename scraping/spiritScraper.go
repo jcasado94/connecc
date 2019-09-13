@@ -24,8 +24,8 @@ func NewSpiritScraper() *SpiritScraper {
 	}
 }
 
-func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, adults, children, infants int) ([]*Trip, error) {
-	trips := make([]*Trip, 0)
+func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, adults, children, infants int) ([]Trip, error) {
+	trips := make([]Trip, 0)
 	var err error
 
 	sc.browser.Post("https://www.spirit.com/Default.aspx?action=search", "application/x-www-form-urlencoded",
@@ -45,18 +45,18 @@ func (sc *SpiritScraper) GetTrips(departure, arrival string, day, month, year, a
 		trip.Fares = sc.getFares(s)
 		trip.Legs = sc.getLegs(s, year, month, day)
 
-		trips = append(trips, &trip)
+		trips = append(trips, trip)
 	})
 
 	if err != nil {
-		return []*Trip{}, err
+		return []Trip{}, err
 	}
 
 	return trips, nil
 }
 
-func (sc *SpiritScraper) getFares(s *goquery.Selection) []*Fare {
-	var fares []*Fare
+func (sc *SpiritScraper) getFares(s *goquery.Selection) []Fare {
+	var fares []Fare
 	nineDollarFareSlice := strings.Split(s.Find(".memberItem.radio label").Text(), "$")
 	if len(nineDollarFareSlice) > 1 {
 		price, err := strconv.ParseFloat(nineDollarFareSlice[1], 64)
@@ -78,8 +78,8 @@ func (sc *SpiritScraper) getFares(s *goquery.Selection) []*Fare {
 	return fares
 }
 
-func (sc *SpiritScraper) getLegs(s *goquery.Selection, year, month, day int) []*Leg {
-	var legs []*Leg
+func (sc *SpiritScraper) getLegs(s *goquery.Selection, year, month, day int) []Leg {
+	var legs []Leg
 	sFlightNumbers := s.Find(".popUpContent .fi-header-text.text-uppercase.text-right")
 	var arrTime, depTime time.Time
 	s.Find(".flight-info-body").Each(func(i int, s *goquery.Selection) {
